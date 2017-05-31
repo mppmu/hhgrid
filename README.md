@@ -13,8 +13,8 @@ Pre-requisites:
 
 Assuming you have `python` you can check for the availability of `numpy` and `scipy` with the commands:
 ```shell
-$ python -c "import numpy"
-$ python -c "import sympy"
+python -c "import numpy"
+python -c "import sympy"
 ```
 
 If you would like to use the C++ interface you can compile the test program `cpp/testgrid.cpp`:
@@ -36,7 +36,7 @@ this will check that everything is set up correctly and show the steps required 
 
 To start the grid server program type the command:
 ```shell
-$ python grid.py --seed=0 --grid='Virt_EFT.grid' --verbose
+python grid.py --seed=0 --grid='Virt_EFT.grid' --verbose
 ```
 This will load the virtual amplitude for the NLO HEFT result. 
 This grid can be used to numerically compare your own implementation of the HEFT result against the grid result. 
@@ -59,11 +59,11 @@ Once the file `pyReadySignal-0000` is present on the disk the grid is ready to c
 
 Open a second terminal (be sure to leave the first terminal open and running `grid.py`) and type either:
 ```shell
-$ ./cpp_testgrid.x
+./cpp_testgrid.x
 ```
 or
 ```shell
-$ ./fortran_testgrid.x
+./fortran_testgrid.x
 ```
 to launch the C++ or Fortran test program.
 

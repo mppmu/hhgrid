@@ -75,6 +75,8 @@ To interface the grid from your own code you will need to copy the functions `gr
 
 We provide a bash shell script `demo.sh` which demonstrates how to automatically launch the python grid server, wait for it to initialise, then launch a program which uses the grid.
 
+## Reference Guide
+
 ### `grid.py`
 
 A server which initialises a python grid and responds to calls to `grid_virt`.

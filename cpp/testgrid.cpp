@@ -8,6 +8,10 @@
 #include <limits>    // std::numeric_limits (only used for testing)
 #include <cmath>     // std::abs (only used for testing)
 
+#if !defined(VERBOSE)
+#define VERBOSE 1
+#endif
+
 /*
  * BOF - Functions required for calling grid
  */
@@ -15,7 +19,7 @@
 double grid_virt(int seed, double s, double t)
 {
     bool verbose;
-    verbose = true;
+    verbose = VERBOSE;
 
     // Use input seed to determine which FIFOs to use,
     // e.g. seed = 0 => FIFOs: pyInputPipe-0000, pyOutputPipe-0000
@@ -98,10 +102,19 @@ bool equal(double a, double b)
 
 bool test_point(int seed, double s, double t, double expected)
 {
+    bool verbose;
+    verbose = VERBOSE;
+
     double res;
-    std::cout << "Sending: " << s << " " << t << std::endl;
+    if (verbose)
+    {
+        std::cout << "Sending: " << s << " " << t << std::endl;
+    }
     res = grid_virt(seed,s,t);
-    std::cout << "Received: " << res << std::endl;
+    if (verbose)
+    {
+        std::cout << "Received: " << res << std::endl;
+    }
     if ( !equal(res,expected) )
     {
         std::cout << "Expected: " << expected << ", Got: " << res << std::endl;

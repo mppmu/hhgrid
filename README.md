@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/mppmu/hhgrid.svg?branch=master)](https://travis-ci.org/mppmu/hhgrid)
+
 # hhgrid
 
 ggHH 2-loop virtual amplitude interfered with 1-loop amplitude.
@@ -19,7 +21,7 @@ python -c "import sympy"
 
 If you would like to use the C++ interface you can compile the test program `cpp/testgrid.cpp`:
 ```shell
-c++ cpp/testgrid.cpp -o cpp_testgrid.x
+c++ -std=c++11 cpp/testgrid.cpp -o cpp_testgrid.x
 ```
 
 If you would like to use the Fortran interface you can compile the test program `fortran/testgrid.f90`:

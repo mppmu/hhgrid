@@ -275,6 +275,7 @@ class CreateGrid:
         self.method = 1  # 1: CloughTocher;  2: Polynomial
         self.flatten = False
         self.polydegree = 2
+        self.tolerance = 1.e-8 # costh is nudged to 1 if within this tolerance
 
         # cdf: transformation x=f(beta) leading to uniform distributions of points in x
         self.cdfdata = np.loadtxt('events.cdf')
@@ -337,7 +338,16 @@ class CreateGrid:
         return math.sqrt(1. - 4. * self.mHs / s)
 
     def costh(self, s, t):
-        return (t - self.u(s, t)) / (s * self.beta(s))
+        res = (t - self.u(s, t)) / (s * self.beta(s))
+        if (abs(res) - 1.) > 0. :
+            if (abs(res) - 1.) < self.tolerance:
+                if res < 0.:
+                    res = -1.
+                else:
+                    res = 1.
+            else:
+                raise ValueError("Grid called with cos(theta) > 1, cos(theta) = {:.40e}".format(res))
+        return res
 
     def GetAmplitude(self, s, t):
         b = self.beta(s)

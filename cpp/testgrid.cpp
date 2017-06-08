@@ -119,6 +119,7 @@ bool test_point(int seed, double s, double t, double expected)
     {
         std::cout << "Expected: " << expected << ", Got: " << res << std::endl;
         std::cout << "TESTS FAILED" << std::endl;
+        kill_python(seed);
         return false;
     }
     return true;
@@ -176,6 +177,20 @@ int main()
         if(!test_point(seed,s,t,expected))
             return 1;
     }
+
+    // Test point that previously landed outside grid due to numerics, gave 0 (for Virt_EFT)
+    s = 275621.46328957588411867618560791015625e0;
+    t = -243368.2897650574450381100177764892578125e0;
+    expected = 4.3499409718481744750728790194216344389133e-04;
+    if (!test_point(seed,s,t,expected))
+        return 1;
+
+    // Test point that previously landed outside grid due to numerics, gave 0 (for Virt_EFT)
+    s = 959959.10608519916422665119171142578125e0;
+    t = -928446.149935275432653725147247314453125e0;
+    expected = 5.9433502098979523395327895229911518981680e-03;
+    if (!test_point(seed,s,t,expected))
+        return 1;
 
     // Tell python program to exit
     kill_python(seed);

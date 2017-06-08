@@ -97,17 +97,20 @@
       function test_point(seed,s,t,expected)
       implicit none
       logical :: test_point
+      logical :: kill_python
       integer :: seed
       real * 8 :: s, t, expected
       real * 8 :: grid_virt
       logical :: equal
       real * 8 :: res
+      logical :: success
       write(*,*) 'Sending: ', s,' ', t
       res = grid_virt(seed,s,t)
       write(*,*) 'Received: ', res
       if (.not. equal(res,expected)) then
          write(*,*) 'Expected: ', expected, ', Got: ', res
          write(*,*) 'TESTS FAILED'
+         success = kill_python(seed)
          test_point = .false.
       else
          test_point = .true.
@@ -172,6 +175,22 @@
             call EXIT(1)
          endif
       end do
+
+      ! Test point that previously landed outside grid due to numerics, gave 0 (for Virt_EFT)
+      s = 275621.46328957588411867618560791015625D0;
+      t = -243368.2897650574450381100177764892578125D0;
+      expected = 4.3499409718481744750728790194216344389133D-04;
+      if(.not. test_point(seed,s,t,expected)) then
+         call EXIT(1)
+      endif
+
+      ! Test point that previously landed outside grid due to numerics, gave 0 (for Virt_EFT)
+      s = 959959.10608519916422665119171142578125D0;
+      t = -928446.149935275432653725147247314453125D0;
+      expected = 5.9433502098979523395327895229911518981680D-03;
+      if(.not. test_point(seed,s,t,expected)) then
+         call EXIT(1)
+      endif
 
       ! Tell python program to exit
       success = kill_python(seed)

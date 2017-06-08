@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/mppmu/hhgrid.svg?branch=master)](https://travis-ci.org/mppmu/hhgrid)
+
 # hhgrid
 
 ggHH 2-loop virtual amplitude interfered with 1-loop amplitude.

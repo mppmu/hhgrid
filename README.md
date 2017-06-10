@@ -108,6 +108,14 @@ Instructs the `grid.py` server to terminate cleanly.
 Parameters:
 * `seed` an integer specifying the seed used to call a `grid.py` server.
 
+### `grid_interactive.py`
+
+A convenience script that can be used to interactively evaluate grid points (primarily for debugging).
+ 
+Arguments:
+* `--grid` a string used to specify which grid to load. 
+
+ 
 ## Internal Note
 
 * `creategrid.py`, `events.cdf`, `Virt_full.grid`, `Virt_EFT.grid` taken from commit `c43eea9` of `POWHEG-BOX-V2/ggHH` repo.

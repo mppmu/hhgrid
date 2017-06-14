@@ -6,6 +6,13 @@ ggHH 2-loop virtual amplitude interfered with 1-loop amplitude.
 
 Returns V_fin using the conventions specified in Eq(2.5) of https://arxiv.org/pdf/1703.09252.pdf
 
+As required by `POWHEG` the born factor of alpha_s^2 is included in the grid. We evaluate alpha_s at a scale of `m_HH/2` using `LHAPDF` with the `PDF4LHC15_nlo_100` set.
+ 
+Physical parameters are set to:
+* `G_F = 1.1663787e-5 GeV^(-2)` (Fermi constant)
+* `m_T = 173 GeV` (top-quark mass)
+* `m_H = 125 GeV` (Higgs boson mass)
+
 ## Installation
 
 Pre-requisites:

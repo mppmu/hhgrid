@@ -122,7 +122,24 @@ A convenience script that can be used to interactively evaluate grid points (pri
 Arguments:
 * `--grid` a string used to specify which grid to load. 
 
+## Grid files and validation points
  
+The grid files contain 4 columns `beta_s`, `cos(theta)`, `V_fin` and `V_fin Error`.
+ 
+Here:
+* `beta_s = \sqrt{1-4*mH^2/s}`
+* `cos(theta) = (t-u)/(s*beta_s)`, where `u= 2 mH^2 - s -t`
+ 
+For ease of validation we give here a few values from the `Virt_EFT.grid` along with the corresponding Mandelstam `s` and `t` and the value that is returned by `grid.py` (note: since `grid.py` internally bins results the output is not perfect for each phase space point).
+ 
+| `beta_s` | `cos(theta)` | `V_fin` | `V_fin Error` | `s` | `t` | `grid.py result` |
+| --- | --- | --- | --- | --- | --- | --- |
+| `0.670215461783` | `0.942415327461`   | `3.14977281395e-05` | `1e-20` | `113469.` | `-5274.78` | `3.1864912705e-05` |
+| `0.749658272418` | `0.358719756797`   | `7.18370167972e-05` | `1e-20` | `142690.` | `-36534.1` | `7.230060450e-05` |
+| `0.774816230102` | `0.667225193755`   | `9.55249958151e-05` | `1e-20` | `156383.` | `-22143.3` | `9.579402805e-05` | 
+| `0.961960758291` | `0.828468885357`   | `0.00450166545088`  | `1e-20` | `837448.` | `-69395.`  | `4.524576122e-03` |
+| `0.831112919562` | `0.00835036268349` | `0.000195523077174` | `1e-20` | `202101.` | `-84724.2` | `1.954913649e-04` |
+
 ## Internal Note
 
 * `creategrid.py`, `events.cdf`, `Virt_full.grid`, `Virt_EFT.grid` taken from commit `c43eea9` of `POWHEG-BOX-V2/ggHH` repo.

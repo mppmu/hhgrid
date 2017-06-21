@@ -23,7 +23,7 @@ Pre-requisites:
 Assuming you have `python` you can check for the availability of `numpy` and `scipy` with the commands:
 ```shell
 python -c "import numpy"
-python -c "import sympy"
+python -c "import scipy"
 ```
 
 If you would like to use the C++ interface you can compile the test program `cpp/testgrid.cpp`:

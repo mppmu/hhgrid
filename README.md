@@ -2,12 +2,12 @@
 
 # hhgrid
 
-ggHH 2-loop virtual amplitude interfered with 1-loop amplitude.
+gghh 2-loop virtual amplitude interfered with 1-loop amplitude.
 
 Returns V_fin using the conventions specified in Eq(2.5) of https://arxiv.org/pdf/1703.09252.pdf
 
 As required by `POWHEG` the born factor of alpha_s^2 is included in the grid. We evaluate alpha_s at a scale of `m_HH/2` using `LHAPDF` with the `PDF4LHC15_nlo_100` set.
- 
+
 Physical parameters are set to:
 * `G_F = 1.1663787e-5 GeV^(-2)` (Fermi constant)
 * `m_T = 173 GeV` (top-quark mass)
@@ -25,102 +25,83 @@ Assuming you have `python` you can check for the availability of `numpy` and `sc
 python -c "import numpy"
 python -c "import scipy"
 ```
-
-If you would like to use the C++ interface you can compile the test program `cpp/testgrid.cpp`:
+If no output is given from these commands then the packages are available.
+ 
+To use the Python/C API you need to build the `hhgrid` library. 
+ To do this run the usual `autotools` commands (replacing `<build-directory>` with the path you would like to install the library to):
 ```shell
-c++ -std=c++11 cpp/testgrid.cpp -o cpp_testgrid.x
+autoreconf -i
+./configure --prefix=<build-directory>
+make
+make check
+make install
+```
+If you do not have a fortran compiler installed and do not want to use the grid from a fortran program, pass the `--disable-fortran` flag to the configure script.
+ We strongly advise to run the `make check` command. This will call the grid for a few selected points and validate that the correct result is produced. 
+ 
+You should now add the directory containing the `hhgrid-config` script to your `PATH` and the `python` data directory to your `PYTHONPATH`. This may be accomplished by adding the following lines to your `.bash_profile` or `.bashrc` (replacing `<build-directory>` with the path you installed the library to):
+```shell
+export PATH="<build-directory>/bin":$PATH
+export PYTHONPATH="<build-directory>/share/hhgrid":$PYTHONPATH
 ```
 
-If you would like to use the Fortran interface you can compile the test program `fortran/testgrid.f90`:
-```shell
-gfortran fortran/testgrid.f90 -o fortran_testgrid.x
-```
+## Python/C API Usage
 
-## Usage
-
-Here we demonstrate how to access the grid with one of the test programs `cpp_testgrid.x` or `fortran_testgrid.x`,
+Here we demonstrate how to access the grid with one of the example programs `c_example.c`, `cpp_example.cpp` or `f90_example.f90` in the `examples` directory,
 this will check that everything is set up correctly and show the steps required to call the grid from your own program.
 
-### Step 1
+The `hhgrid-config` script helps to obtain the correct flags for compiling and linking the program.
 
-To start the grid server program type the command:
+If you would like to use the C interface you can compile the example program `examples/c_example.c`:
 ```shell
-python grid.py --seed=0 --grid='Virt_EFT.grid' --verbose
-```
-This will load the virtual amplitude for the NLO HEFT result. 
-This grid can be used to numerically compare your own implementation of the HEFT result against the grid result. 
-The `Virt_EFT.grid` result was produced using precisely the same conventions as the full result grid.
-
-After a minute or so you will see the output:
-```shell
-== Ready to evaluate function ==
-Input Pipe:  pyInputPipe-0000
-Output Pipe:  pyOutputPipe-0000
-Ready Signal:  pyReadySignal-0000
+cc examples/c_example.c -o c_example.x `hhgrid-config --cflags --libs`
 ```
 
-The file `pyReadySignal-0000` should now exist on disk. 
-The server is now ready to evaluate the virtual amplitude using the grid.
-
-### Step 2
-
-Once the file `pyReadySignal-0000` is present on the disk the grid is ready to communicate via the FIFOs `pyInputPipe-0000` and `pyOutputPipe-0000`, which it creates.
-
-Open a second terminal (be sure to leave the first terminal open and running `grid.py`) and type either:
+If you would like to use the C++ interface you can compile the test program `examples/cpp_example.cpp`:
 ```shell
-./cpp_testgrid.x
+c++ examples/cpp_example.cpp -o cpp_example.x `hhgrid-config --cflags --libs`
 ```
-or
-```shell
-./fortran_testgrid.x
-```
-to launch the C++ or Fortran test program.
 
-The test program will call the grid for a few selected points and validate that the correct result is produced. 
+If you would like to use the C++ interface you can compile the test program `examples/f90_example.f90`:
+```shell
+gfortran examples/f90_example.f90 -o f90_example.x `hhgrid-config --cflags --libs`
+```
+
+To launch the C, C++ and Fortran test program enter:
+```shell
+./c_example.x
+./cpp_example.x
+./f90_example.x
+```
+The example programs will call the grid for a single phase-space point. They demonstate as simply as possible how to use the library within your own code 
 
 ## Using the grid with your own code
-
-To interface the grid from your own code you will need to copy the functions `grid_virt(seed,s,t)` and `kill_python(seed)` from `cpp/testgrid.cpp` or `fortran/testgrid.f90`. After this, follow the same steps as above but rather than launching the test programs launch your own code which calls `grid_virt(seed,s,t)`.
-
-We provide a bash shell script `demo.sh` which demonstrates how to automatically launch the python grid server, wait for it to initialise, then launch a program which uses the grid.
-
-## Reference Guide
-
-### `grid.py`
-
-A server which initialises a python grid and responds to calls to `grid_virt`.
-
-Arguments:
-* `--seed` an integer used to specify which FIFOs should be created and responded to. 
-* `--grid` a string used to specify which grid to load. 
-* `--verbose` a flag used to indicate if detailed output should be printed to `stdout`.
-
-Currently we distribute the grids:
-* `Virt_EFT.grid` the NLO QCD result in the HEFT.
-* `Virt_full.grid` the NLO QCD result in the Standard Model.
-
-### `grid_virt(int seed, double s, double t)`
-
-Returns the value of the virtual matrix element interfered with the born with the conventions specified in Eq(2.5) of https://arxiv.org/pdf/1703.09252.pdf.
-
-Parameters:
-* `seed` an integer specifying the seed used to call a `grid.py` server. The `grid.py` server is not threadsafe and should only be called from one thread, thus it is usually necessary to launch different copies of `grid.py` each with a different `seed` then have each thread call `grid_virt(seed,s,t)` with a `seed` unique to the thread.
-* `s` the Mandelstam s=(p1+p2)^2.
-* `t` the Mandelstam t=(p1-p3)^2.
-
-### `kill_python(int seed)`
-
-Instructs the `grid.py` server to terminate cleanly.
-
-Parameters:
-* `seed` an integer specifying the seed used to call a `grid.py` server.
-
-### `grid_interactive.py`
-
-A convenience script that can be used to interactively evaluate grid points (primarily for debugging).
  
-Arguments:
-* `--grid` a string used to specify which grid to load. 
+The `hhgrid` library exposes the following functions:
+
+* ```void python_initialize(void)```
+  A thin wrapper around the Python C API function `Py_Initialize()`, used at the beginning of your program to start the `python` interpreter.
+* ```void python_decref(PyObject* grid)```
+  A thin wrapper around the Python C API function `Py_DECREF(grid)` used to decrement the `python` interpreter reference count by 1 (required for garbage collection).
+* ```void python_finalize(void)```
+  A thin wrapper around the Python C API function `Py_Finalize()` used at the end of your program to terminate the `python` interpreter.
+* ```void python_printinfo(void)```
+  Prints the python paths and versions being used by the library (useful for debugging).
+* ```PyObject* grid_initialize(const char* grid_name)```
+  Searches `PYTHONPATH` for a grid with a file name matching the input `grid_name`, if found it initialises this grid else terminates your program.
+* ```double grid_virt(PyObject* grid, double s, double t)```
+  Uses the `grid` object to evaluate the phase-space point specified by the Mandelstam invariants `s`,`t`.
+ 
+Usually, the easiest way to understand how to use the grid with your own code is to look at the relevant example in the `examples` directory.
+
+Broadly the following steps should be taken to use the grid:
+* include the `hhgrid.h` as in the examples (C or C++).
+* Call `python_initialize()`, `python_printinfo()` once at the beginning of your program.
+* Construct a grid object using `PyObject* pGrid = grid_initialize(grid_name);` at the beginning of your program. 
+* Call `grid_virt(pGrid, s, t)` for each phase-space point you wish to evaluate, here `pGrid` is an instance of the grid and `s`,`t` are the Mandelstam invariants.
+* Call `python_decref(pGrid)` for each instance of the grid and `python_finalize()` once at the end of your program.
+
+When linking your code against `hhgrid` we advise to use the `hhgrid-config --cflags --libs` command to ensure that your program is compiled with the correct `python` headers and libraries.
 
 ## Grid files and validation points
  
@@ -139,18 +120,29 @@ For ease of validation we give here a few values from the `Virt_EFT.grid` along 
 | `0.774816230102` | `0.667225193755`   | `9.55249958151e-05` | `1e-20` | `156383.` | `-22143.3` | `9.579402805e-05` | 
 | `0.961960758291` | `0.828468885357`   | `0.00450166545088`  | `1e-20` | `837448.` | `-69395.`  | `4.524576122e-03` |
 | `0.831112919562` | `0.00835036268349` | `0.000195523077174` | `1e-20` | `202101.` | `-84724.2` | `1.954913649e-04` |
-
+ 
 For validation the corresponding Born HTL cross-section values are:
  
- | `s` | `t` | `B` |
- | --- | --- | --- |
- | `113469.` | `-5274.78` | `9.75634751746e-07` |
- | `142690.` | `-36534.1` | `2.19481322735e-06` |
- | `156383.` | `-22143.3` | `2.90841407195e-06` |
- | `837448.` | `-69395.`  | `0.000134710295203` |
- | `202101.` | `-84724.2` | `5.9137806539e-06`  |
+| `s` | `t` | `B` |
+| --- | --- | --- |
+| `113469.` | `-5274.78` | `9.75634751746e-07` |
+| `142690.` | `-36534.1` | `2.19481322735e-06` |
+| `156383.` | `-22143.3` | `2.90841407195e-06` |
+| `837448.` | `-69395.`  | `0.000134710295203` |
+| `202101.` | `-84724.2` | `5.9137806539e-06`  |
+
+
+## Reference Guide
+
+### `examples/grid_interactive.py`
+
+A convenience script that can be used to interactively evaluate grid points (primarily for debugging).
  
-## Internal Note
+Arguments:
+* `--grid` a string used to specify which grid to load. 
+ 
+# Internal Note
 
 * `creategrid.py`, `events.cdf`, `Virt_full.grid`, `Virt_EFT.grid` taken from commit `c43eea9` of `POWHEG-BOX-V2/ggHH` repo.
 * rewrote `creategrid.py` as class
+

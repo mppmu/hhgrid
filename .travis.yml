@@ -7,8 +7,9 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-4.9
+            - gfortran-4.9
       env:
-         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+         - MATRIX_EVAL="export CC=gcc-4.9 && export CXX=g++-4.9 && export FC=gfortran-4.9"
       python: "2.7"
 
 # Currently python 3.2 is not supported
@@ -19,8 +20,9 @@ matrix:
 #            - ubuntu-toolchain-r-test
 #          packages:
 #            - g++-4.9
+#            - gfortran-4.9
 #      env:
-#         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+#         - MATRIX_EVAL="export CC=gcc-4.9 && export CXX=g++-4.9 && export FC=gfortran-4.9"
 #      python: "3.2"
 
     - os: linux
@@ -30,8 +32,9 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
+            - gfortran-5
       env:
-         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+         - MATRIX_EVAL="export CC=gcc-5 && export CXX=g++-5 && export FC=gfortran-5"
       python: "2.7"
 
     - os: linux
@@ -41,8 +44,9 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-6
+            - gfortran-6
       env:
-        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+        - MATRIX_EVAL="export CC=gcc-6 && export CXX=g++-6 && export FC=gfortran-6"
       python: "2.7"
 
     - os: linux
@@ -54,7 +58,7 @@ matrix:
           packages:
             - clang-3.6
       env:
-        - MATRIX_EVAL="CC=clang-3.6 && CXX=clang++-3.6"
+        - MATRIX_EVAL="export CC=clang-3.6 && export CXX=clang++-3.6"
       python: "2.7"
 
     - os: linux
@@ -66,7 +70,7 @@ matrix:
           packages:
             - clang-3.7
       env:
-        - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
+        - MATRIX_EVAL="export CC=clang-3.7 && export CXX=clang++-3.7"
       python: "2.7"
 
     - os: linux
@@ -78,15 +82,28 @@ matrix:
           packages:
             - clang-3.8
       env:
-        - MATRIX_EVAL="CC=clang-3.8 && CXX=clang++-3.8"
+        - MATRIX_EVAL="export CC=clang-3.8 && export CXX=clang++-3.8"
       python: "2.7"
+
+    - os: osx
+      osx_image: xcode8
+      language: c++
+      compiler: clang
 
 language: python
 before_install:
   - eval "${MATRIX_EVAL}"
+  - echo CC=$CC
+  - echo CXX=$CXX
+  - echo FC=$FC
+  - echo pwd=`pwd`
 install:
-  - "$CXX -std=c++11 cpp/testgrid.cpp -o cpp_testgrid.x -DVERBOSE=0"
+  - export PATH=${TRAVIS_BUILD_DIR}/dist_install/bin:$PATH
+  - export PYTHONPATH=${TRAVIS_BUILD_DIR}/dist_install/share/hhgrid:$PYTHONPATH
   - pip install --upgrade pip setuptools wheel
   - pip install --only-binary=numpy,scipy numpy scipy
+  - autoreconf -i
+  - if [ -z $FC ]; then ./configure --disable-fortran --prefix=${TRAVIS_BUILD_DIR}/dist_install; else ./configure --prefix=${TRAVIS_BUILD_DIR}/dist_install; fi
+  - make
 script:
-  - "./demo.sh"
+  - make check

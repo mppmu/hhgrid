@@ -2,15 +2,17 @@ import numpy as np
 import math
 import operator
 import itertools
-#import matplotlib as mpl
-#import matplotlib.pyplot as plt
-#import pylab as pl
-#from mpl_toolkits.mplot3d import Axes3D
 from scipy import interpolate
 import scipy
 import scipy.optimize
 from math import sqrt
 import random
+import os
+
+#import matplotlib as mpl
+#import matplotlib.pyplot as plt
+#import pylab as pl
+#from mpl_toolkits.mplot3d import Axes3D
 #import statsmodels.api as sm
 #from phasespace import *
 
@@ -271,6 +273,7 @@ class Grid:
 class CreateGrid:
     def __init__(self,selected_grid):
         self.selected_grid = selected_grid
+        self.selected_grid_dirname = os.path.dirname(self.selected_grid)
         self.mHs = 125.**2
         self.method = 1  # 1: CloughTocher;  2: Polynomial
         self.flatten = False
@@ -278,7 +281,7 @@ class CreateGrid:
         self.tolerance = 1.e-8 # costh is nudged to 1 if within this tolerance
 
         # cdf: transformation x=f(beta) leading to uniform distributions of points in x
-        self.cdfdata = np.loadtxt('events.cdf')
+        self.cdfdata = np.loadtxt(os.path.join(self.selected_grid_dirname,'events.cdf'))
         self.cdf = interpolate.splrep(*self.cdfdata.T, k=1)
 
         # fig=pl.figure()

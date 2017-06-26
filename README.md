@@ -62,12 +62,12 @@ If you would like to use the C++ interface you can compile the test program `exa
 c++ examples/cpp_example.cpp -o cpp_example.x `hhgrid-config --cflags --libs`
 ```
 
-If you would like to use the C++ interface you can compile the test program `examples/f90_example.f90`:
+If you would like to use the fortran interface you can compile the test program `examples/f90_example.f90`:
 ```shell
 gfortran examples/f90_example.f90 -o f90_example.x `hhgrid-config --cflags --libs`
 ```
 
-To launch the C, C++ and Fortran test program enter:
+To launch the C, C++ and fortran test program enter:
 ```shell
 ./c_example.x
 ./cpp_example.x

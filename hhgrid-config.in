@@ -37,13 +37,13 @@ tmp=$( echo "$*" | egrep -- '--\<incdir\>')
 test -n "$tmp" && OUT="$OUT @includedir@"
 
 tmp=$( echo "$*" | egrep -- '--\<cflags|cppflags|cxxflags\>')
-test -n "$tmp" && OUT="$OUT -I@includedir@" @PYTHON_CSPEC@
+test -n "$tmp" && OUT="$OUT -I@includedir@ @PYTHON_CSPEC@"
 
 tmp=$( echo "$*" | egrep -- '--\<libdir\>')
 test -n "$tmp" && OUT="$OUT @libdir@"
 
 tmp=$( echo "$*" | egrep -- '--\<libs|ldflags\>')
-test -n "$tmp" && OUT="$OUT -L@libdir@ -lhhgrid" @PYTHON_LSPEC@
+test -n "$tmp" && OUT="$OUT -L@libdir@ -lhhgrid @PYTHON_LSPEC@"
 
 tmp=$( echo "$*" | egrep -- '--\<datadir\>|--\<datarootdir\>')
 test -n "$tmp" && OUT="$OUT @datadir@/@PACKAGE_TARNAME@"

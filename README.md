@@ -44,6 +44,19 @@ You should now add the directory containing the `hhgrid-config` script to your `
 export PATH="<build-directory>/bin":$PATH
 export PYTHONPATH="<build-directory>/share/hhgrid":$PYTHONPATH
 ```
+ 
+The directory containing the `libhhgrid` shared library should be added to your `LD_LIBRARY_PATH` or `DYLD_LIBRARY_PATH` (Mac OS):
+```shell
+export LD_LIBRARY_PATH="<build-directory>/lib":$LD_LIBRARY_PATH
+```
+or (some 64 bit systems)
+```shell
+export LD_LIBRARY_PATH="<build-directory>/lib64":$LD_LIBRARY_PATH
+```
+or (Mac OS)
+```shell
+ export DYLD_LIBRARY_PATH="<build-directory>/lib":$DYLD_LIBRARY_PATH
+```
 
 ## Python/C API Usage
 

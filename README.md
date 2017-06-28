@@ -144,6 +144,9 @@ For validation the corresponding Born HTL cross-section values are:
 | `837448.` | `-69395.`  | `0.000134710295203` |
 | `202101.` | `-84724.2` | `5.9137806539e-06`  |
 
+For the Pure HEFT (not re-weighted by the Born) at NLO for hadronic centre-of-mass energy ``\sqrt{s} = 14 TeV`` with the central (dynamic) scale value (``muR=muF=M_{hh}/2``) we obtain for the total cross-section:
+``\sigma_tot = 0.31937346E-01 +/- 0.46742589E-05 pb`` (analytic)
+``\sigma_tot = 0.31640084E-01 +/- 0.49620079E-05 pb`` (grid)
 
 ## Reference Guide
 

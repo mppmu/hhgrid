@@ -12,6 +12,8 @@ Physical parameters are set to:
 * `G_F = 1.1663787e-5 GeV^(-2)` (Fermi constant)
 * `m_T = 173 GeV` (top-quark mass)
 * `m_H = 125 GeV` (Higgs boson mass)
+* `w_T = 0` (top-quark width)
+* `w_H = 0` (Higgs boson width)
 
 ## Installation
 

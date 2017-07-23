@@ -20,7 +20,7 @@ Physical parameters are set to:
 Pre-requisites:
 * `python` (tested for 2.7.13)
 * `numpy` (tested for 1.11.1)
-* `scipy` (tested for 0.17.1)
+* `scipy` (tested for 0.17.1, requires at least 0.14.0)
 
 Assuming you have `python` you can check for the availability of `numpy` and `scipy` with the commands:
 ```shell

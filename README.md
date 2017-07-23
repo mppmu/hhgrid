@@ -152,6 +152,10 @@ For the Pure HEFT (not re-weighted by the Born) at NLO for hadronic centre-of-ma
 
 `\sigma_tot = 0.31640084E-01 +/- 0.49620079E-05 pb` (grid)
 
+In the `examples/validation` folder we also provide example distributions for `m_HH` (invariant mass of the Higgs boson pair), `p_T^H` (transverse momentum of a random Higgs boson) and `y_HH` (rapidity of the Higgs pair system). 
+The `heft`/`full` files contain the NLO result at 14 TeV in the HEFT/Full theory respectively. 
+The 1st column of the file is the bin centre, the 2nd column is the bin value and the 3rd column is the error on the bin.
+ 
 ## Reference Guide
 
 ### `examples/grid_interactive.py`

@@ -10,7 +10,7 @@ matrix:
             - gfortran-4.9
       env:
          - MATRIX_EVAL="export CC=gcc-4.9 && export CXX=g++-4.9 && export FC=gfortran-4.9"
-      python: "2.7.6"
+      python: "2.7"
 
 language: python
 before_install:

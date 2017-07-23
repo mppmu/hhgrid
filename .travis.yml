@@ -10,7 +10,7 @@ matrix:
             - gfortran-4.9
       env:
          - MATRIX_EVAL="export CC=gcc-4.9 && export CXX=g++-4.9 && export FC=gfortran-4.9"
-      python: "2.7"
+      python: "2.7.6"
 
 language: python
 before_install:
@@ -23,7 +23,7 @@ install:
   - export PATH=${TRAVIS_BUILD_DIR}/dist_install/bin:$PATH
   - export PYTHONPATH=${TRAVIS_BUILD_DIR}/dist_install/share/hhgrid:$PYTHONPATH
   - pip install --upgrade pip setuptools wheel
-  - pip install --only-binary=numpy,scipy numpy==1.8.2 scipy
+  - pip install --only-binary=numpy,scipy numpy==1.8.2 scipy==0.14.0
   - autoreconf -i
   - if [ -z $FC ]; then ./configure --disable-fortran --prefix=${TRAVIS_BUILD_DIR}/dist_install; else ./configure --prefix=${TRAVIS_BUILD_DIR}/dist_install; fi
   - make

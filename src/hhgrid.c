@@ -2,14 +2,19 @@
 #include "hhgrid.h"
 
 #include <python2.7/Python.h>
-#include <stdlib.h> // setenv, strdup, strtok, NULL
+#include <stdlib.h> // strdup, strtok, NULL
 #include <assert.h> // assert
-#include <unistd.h> // access
+#include <unistd.h> // access, getcwd
 
 // BOF - Helper Functions (mostly for Fortran)
 void python_initialize()
 {
     Py_Initialize();
+    if (!Py_IsInitialized())
+    {
+        printf("ERROR: Failed to initialize Python interpreter\n");
+        exit(1);
+    }
 };
 
 void python_decref(PyObject* grid)
@@ -55,11 +60,12 @@ PyObject* grid_initialize(const char* grid_name)
     char* creategrid_name = "creategrid.py";
     size_t len_creategrid_name = strlen(creategrid_name);
 
-    char* pythonpath = strdup(getenv("PYTHONPATH"));
-    char* result = strtok( pythonpath, delims );
+    char* pythonsyspath = strdup(Py_GetPath());
+    char* result = strtok( pythonsyspath, delims );
+    char cwd[1024];
     size_t len_result = 0;
 
-    // Check if grid_name is accessible as-is
+    // Check if grid_name is accessible as-is (i.e. grid is in the cwd)
     if( access(grid_name, F_OK) != -1 && access(grid_name, R_OK) != -1 )
     {
         grid_file_path = (char*) malloc(len_grid_name + 1); // +1 for null terminator
@@ -72,10 +78,42 @@ PyObject* grid_initialize(const char* grid_name)
         memcpy(creategrid_file_path, creategrid_name, len_creategrid_name + 1);
 
         search_paths = 0;
-        setenv("PYTHONPATH", ".", 1); // Set PYTHONPATH to look here
+
+        // Get cwd
+        if (getcwd(cwd, sizeof(cwd)) == NULL)
+        {
+            printf("getcwd() error\n");
+            exit(1);
+        }
+        printf("cwd: %s\n", cwd);
+
+        // Add cwd to Python search path
+        PyObject* syspath = PySys_GetObject("path");
+        if (syspath == NULL)
+        {
+            PyErr_Print();
+            printf("ERROR: Python failed to import sys\n");
+        }
+        printf("Adding cwd to python sys.path\n");
+        PyObject* pName = PyString_FromString(cwd);
+        if (pName == NULL)
+        {
+            PyErr_Print();
+            printf("ERROR: Failed to create Python string from cwd: please check that cwd is a valid string\n");
+        }
+        if (PyList_Insert(syspath, 0, pName))
+        {
+            PyErr_Print();
+            printf("ERROR: Failed to insert extra path into sys.path list\n");
+        }
+        if (PySys_SetObject("path", syspath))
+        {
+            PyErr_Print();
+            printf("ERROR: Failed to set sys.path object\n");
+        }
     }
 
-    // Else search PYTHONPATH for grid_name
+    // Else search python sys.path for grid_name
     while( search_paths == 1 && result != NULL )
     {
         len_result = strlen(result);
@@ -133,7 +171,6 @@ PyObject* grid_initialize(const char* grid_name)
         }
     }
 
-    printf("PYTHONPATH: %s\n", getenv("PYTHONPATH"));
     printf("Grid Path: %s\n", grid_file_path);
     printf("Events file Path: %s\n", events_file_path);
     printf("CreateGrid file Path: %s\n", creategrid_file_path);
@@ -142,7 +179,7 @@ PyObject* grid_initialize(const char* grid_name)
     if(pModule == NULL)
     {
         PyErr_Print();
-        printf("Failed to load creategrid.py: please check that you have numpy and scipy installed");
+        printf("ERROR: Failed to load creategrid.py: please check that you have numpy and scipy installed\n");
     }
     assert(pModule != NULL);
 
@@ -150,7 +187,7 @@ PyObject* grid_initialize(const char* grid_name)
     if(pClass == NULL)
     {
         PyErr_Print();
-        printf("Failed to locate CreateGrid class: please check that you have the latest version of creategrid.py and Python 2.7.x");
+        printf("ERROR: Failed to locate CreateGrid class: please check that you have the latest version of creategrid.py and Python 2.7.x\n");
     }
     assert(pClass != NULL);
 
@@ -158,7 +195,7 @@ PyObject* grid_initialize(const char* grid_name)
     if(pGridName == NULL)
     {
         PyErr_Print();
-        printf("Failed to create Python string from grid_file_path: please check that grid_file_path is a valid string");
+        printf("ERROR: Failed to create Python string from grid_file_path: please check that grid_file_path is a valid string\n");
     }
     assert(pGridName != NULL);
 
@@ -166,7 +203,7 @@ PyObject* grid_initialize(const char* grid_name)
     if(pGridNameTuple == NULL)
     {
         PyErr_Print();
-        printf("Failed to create Python tuple: please check that your Python version is 2.7.x");
+        printf("ERROR: Failed to create Python tuple: please check that your Python version is 2.7.x\n");
     }
     assert(pGridNameTuple != NULL);
 
@@ -174,12 +211,12 @@ PyObject* grid_initialize(const char* grid_name)
     if(pInstance == NULL)
     {
         PyErr_Print();
-        printf("Failed to create instance of CreateGrid: please check that you have the latest version of creategrid.py and Python 2.7.x");
+        printf("ERROR: Failed to create instance of CreateGrid: please check that you have the latest version of creategrid.py and Python 2.7.x\n");
     }
     assert(pInstance != NULL);
 
     // Cleanup
-    free(pythonpath);
+    free(pythonsyspath);
     free(grid_file_path);
     free(events_file_path);
     free(creategrid_file_path);

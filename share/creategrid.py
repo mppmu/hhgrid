@@ -79,15 +79,6 @@ class Grid:
             def linfunc(x, a, b, c):
                 return a + x[0] * b + x[1] * c
 
-            def linfunc1d(x, a, b):
-                return a + x[0] * b
-
-            def constfunc(x, a):
-                return a
-
-            def func2(x, a, b, c, d, e, f):
-                return a + x[0] * b + x[1] * c + d * x[0] ** 2 + e * x[1] ** 2 + f * x[0] * x[1]
-
             for _ in range(nsamples):
                 if nsamples > 1:
                     dat = np.array(

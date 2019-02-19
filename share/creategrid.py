@@ -73,7 +73,6 @@ class Grid:
             if (data):
                 self.addPoint(data)
         else:
-            # nneighbor=data.size/np.prod(self.nbin)
             nneighbor = 5
             nsamples = 1
 
@@ -100,7 +99,6 @@ class Grid:
                     x = self.xmin + k * self.dx
                     points = np.array(sorted(dat, key=lambda p: np.linalg.norm(p[:self.dim] - x))[:nneighbor])
                     X = points[:, 0:2]
-                    #          X=sm.add_constant(X)
                     Y = points[:, 2]
                     E = 1 / points[:, 3] ** 2  # * np.linalg.norm(points[:,:self.dim]- x)**(-2)
 
@@ -108,16 +106,8 @@ class Grid:
                     sigma = points[:, 3]
                     X = points[:, 0:2]
                     X = np.array([xx - x for xx in X]).T
-                    # popt, pcov = scipy.optimize.curve_fit(func2,X,Y)
-                    #          popt, pcov = scipy.optimize.curve_fit(func2,X,Y,sigma=points[:,3],absolute_sigma=True)
-                    # popt, pcov = scipy.optimize.curve_fit(linfunc,X,Y)
-                    # popt, pcov = scipy.optimize.curve_fit(linfunc,X,Y,sigma=points[:,3],absolute_sigma=True)
-                    #          popt, pcov = scipy.optimize.curve_fit(constfunc,X,Y,sigma=points[:,3],absolute_sigma=True)
-                    #          popt, pcov = scipy.optimize.curve_fit(func2,X,Y,sigma=points[:,3])
                     popt, pcov2 = scipy.optimize.curve_fit(linfunc, X, Y, sigma=sigma, absolute_sigma=True)
                     popt, pcov1 = scipy.optimize.curve_fit(linfunc, X, Y, sigma=sigma, absolute_sigma=False)
-                    # popt, pcov = scipy.optimize.curve_fit(linfunc,X,Y,sigma=points[:,3],absolute_sigma=False)
-                    #          print "fitval: ",linfunc(x,*popt)
                     self.data[k].add(popt[0], max(sqrt(pcov1[0, 0]), sqrt(
                         pcov2[0, 0])))  # corresponds to multiplying error estimate of chi-sq fit with max(1,chisq)
                     '''
@@ -127,16 +117,6 @@ class Grid:
                        0.9  1      1.1  1      1      0.5     0.0025   0.02
                        ==> use cov2 if chisq>>1, cov1 if chisq<1
                     '''
-                    # print x,np.mean(Y),popt[0],sqrt(pcov1[0,0]),sqrt(pcov2[0,0])
-                    # self.data[k].add(linfunc(x,*popt))
-
-                    #          print "polyval:  ",polyval2d(x[0],x[1],fit,degree)
-                    ##          smx=sm.add_constant(x)
-                    #          smx=[1.,x[0], x[1]]
-                    #          print x,smx
-                    #          print "wls.pred: ",wls_model.predict(smx)
-                    #
-                    #          raw_input('')
 
     def polyfit2d(self, x, y, z, orders):
         ncols = np.prod(orders + 1)
@@ -214,8 +194,6 @@ class Grid:
         for i in range(nsamples):
             temp = zip(*self.gridpoints(sample=(nsamples != 1), flag='x', extendToBorder=True))
             self.interpolators.append(interpolate.CloughTocher2DInterpolator(list(temp[0]), temp[1], fill_value=0.))
-            #      temp=zip(*self.gridpoints(sample=(nsamples!=1),flag='plain',extendToBorder=False))
-            #      self.interpolators.append(interpolate.SmoothBivariateSpline(temp[0],temp[1],temp[2],bbox=[0.,1.,0.,1.]))
 
             # polynomial interpolation
             nneighbor = 2
@@ -230,30 +208,14 @@ class Grid:
                 dat = [np.append(self.x(x + kmin), self.data[tuple(x + kmin)].gety(sample=(nsamples != 1))) for x in
                        np.ndindex(*(degree + 1))]
                 x, y, z = np.asarray(zip(*dat))
-                #        z=np.asarray(zip(*dat)[2])
                 self.pol[k, i] = self.polyfit2d(x, y, z, orders=degree)
-
-
-                #        xx=self.x(k)
-                #        dat=[ [x+kmin[0], y+kmin[1], self.data[(x+kmin[0],y+kmin[1])].gety(sample=(nsamples!=1)) ] for x,y in np.ndindex(*(degree+1))]
-                #        print kk,degree,xx
-                #        print dat
-                #        x,y=np.asarray(zip(*dat)[0:2],dtype=int)
-                #        z=np.asarray(zip(*dat)[2])
-                #        self.pol[k] = polyfit2d(x,y,z,degree)
-                #        for x,y in np.ndindex(*(degree+1))+kmin:
-                #          print np.array([x,y])
-                #        pol=np.Poly
 
     def interpolate(self, x, y, selectsample=-1):
         if (self.method == 2):
             k = self.k(tuple([x, y]))
             temp = [self.polyval2d(x, y, self.pol[k, i], self.deg[k]) for i in range(self.nsamples)]
-            # return (self.polyval2d(x,y,self.pol[k],self.deg[k]),0.)
         else:
             temp = [interpolator(x, y) for interpolator in self.interpolators]
-            # temp=[ interpolator(float(x[0]),float(x[1])) for interpolator in self.interpolators]
-            #      return (np.mean(temp),np.std(temp))
         if (selectsample == -1):
             return (np.mean(temp), np.std(temp))
         else:
@@ -264,10 +226,6 @@ class Grid:
         s = np.shape(X)
         temp = np.array([self.interpolate(x, y, selectsample)[0] for x, y in
                          np.array([x for x in np.vstack([X.ravel(), Y.ravel()])]).T]).reshape(s)
-
-        #    s= tuple(list(np.shape(X)) + [2,])
-        #    temp= np.array([ self.interpolate(x,y) for x,y in  np.array([ x for x in np.vstack([X.ravel(), Y.ravel()]) ]).T ]).reshape(s)
-
         return temp
 
 class CreateGrid:
@@ -284,55 +242,23 @@ class CreateGrid:
         self.cdfdata = np.loadtxt(os.path.join(self.selected_grid_dirname,'events.cdf'))
         self.cdf = interpolate.splrep(*self.cdfdata.T, k=1)
 
-        # fig=pl.figure()
-        # ax = fig.add_subplot(111)
-        # ax.scatter(*cdfdata.T)
-        # x_grid = np.arange(0, 1, 0.01)
-        # y_grid=interpolate.splev(x_grid,cdf)
-        # ax.plot(x_grid,y_grid)
-        # pl.show()
-        # exit(1)
-
-        # dataInUniform=np.loadtxt(selected_grid,converters={0: lambda sbeta: interpolate.splev(float(sbeta),cdf)})
-
         x0, x1, y, e = np.loadtxt(self.selected_grid, unpack=True)
-        #dataIn = np.array([x0, x1, y, e]).T
 
         x0Uniform = interpolate.splev(x0, self.cdf)
-        #dataInUniform = np.array([x0Uniform, x1, y, e]).T
 
         if (self.flatten):
             poly = np.poly1d(np.polyfit(x0Uniform, y, self.polydegree, w=1. / e))
             yFlat = y / poly(x0Uniform)
-
-            # xp = np.linspace(0, 1, 100)
-            # fig1=plt.figure()
-            # ax1=fig1.gca()
-            # ax1.plot(x0Uniform,y,'.',xp,poly(xp),'--')
-
-            # fig2=plt.figure()
-            # ax2=fig2.gca()
-            # ax2.axhline(y=1., xmin=0, xmax=1,ls='--')
-            # ax2.plot(x0Uniform,yFlat,'.')
         else:
             poly = np.poly1d([1.])
             yFlat = y
 
         dataInUniformFlat = np.array([x0Uniform, x1, yFlat, e]).T
 
-        # fig0=plt.figure()
-        # ax0 = fig0.add_subplot(111, projection='3d')
-        # ax0.scatter(*(dataInUniformFlat.T),s=5,color='blue')
-        # for d in dataInUniformFlat:
-        #  ax0.plot([d[0],d[0]],[d[1],d[1]],[d[2]-d[3],d[2]+d[3]],'_',color='black')
         # plt.show()
 
-
         self.interpolator = Grid(self.method, 2, (0, 0), (1, 1), (100, 30), data=dataInUniformFlat, binned=False)
-
-        # a.addPoint(dataInUniformFlat)
         self.interpolator.initInterpolation(1)
-        #self.interpolator.printgrid()
 
     def u(self, s, t):
         return 2 * self.mHs - s - t
@@ -356,140 +282,11 @@ class CreateGrid:
         b = self.beta(s)
         cTh = abs(self.costh(s, t))
         xUniform = interpolate.splev(b, self.cdf)
-        #  print s,t
-        #  print b,cTh
-        #  print a.interpolate(xUniform,cTh)[0]
         return self.interpolator.interpolate(xUniform, cTh)[0]
 
-
-        # print a.gridpoints(flag='x')
-        #
-        # fout=open("output","w")
-        #
-        ####
-        #####pspoints=[PSpoint() for i in range(400)]
-        #####pspoints=[[s,cosTh,w,a.interpolate(interpolate.splev(beta(s),cdf),abs(cosTh))[0]] for s,cosTh,w in [PSpoint() for _ in range(10)] ]
-        #####pspoints=[w*BornHTL(s,s/4,pdf) for s,cosTh,w in [PSpoint() for _ in range(10000)] ]
-        ####pspoints=[w*a.interpolate(interpolate.splev(beta(s),cdf),abs(cosTh))[0] for s,cosTh,w in [PSpoint() for _ in range(1000000)] ]
-        ####print pspoints
-        ####print np.mean(pspoints)
-        ####print np.std(pspoints,ddof=1)/sqrt(len(pspoints))
-        ####
-        ####exit(1)
-        ####
-        #
-        # print a.interpolate(0.9032,0.4)
-        #
-        ##random.shuffle(dataIn)
-        # diff=[]
-        # nstd=[]
-        # sumdiff=0.
-        #
-        #
-        # for d in dataIn[1500:]:
-        #  xUniform=interpolate.splev(d[0],cdf)
-        #  gridres=a.interpolate(xUniform,d[1])
-        #  if(flatten):
-        #    gridres=[gridres[0]*poly(xUniform),gridres[1]*poly(xUniform)]
-        #  fout.write("s/mTs= %5.2f  x=(%5.2f,%5.2f)    amp: %7.4e +- %7.4e     grid:  %7.4e +- %7.4e   diff[%%]:  %5.2f    #stddev(amp): %5.2f   #stddev(grid): %5.2f   #stddev(gr+am): %5.2f\n" % ((125./173)**2*4./(1.-d[0]**2),xUniform,d[1],d[2],d[3],gridres[0],gridres[1], ((gridres[0]-d[2])/d[2])*100.,abs(gridres[0]-d[2])/d[3],abs(gridres[0]-d[2])/gridres[1],abs(gridres[0]-d[2])/sqrt(gridres[1]**2+d[3]**2)))
-        #  print("s/mTs= %5.2f  x=(%5.2f,%5.2f)    amp: %7.4e +- %7.4e     grid:  %7.4e +- %7.4e   diff[%%]:  %5.2f    #stddev(amp): %5.2f   #stddev(grid): %5.2f   #stddev(gr+am): %5.2f  " % ((125./173)**2*4./(1.-d[0]**2),xUniform,d[1],d[2],d[3],gridres[0],gridres[1],
-        #                                             ((gridres[0]-d[2])/d[2])*100.,abs(gridres[0]-d[2])/d[3],abs(gridres[0]-d[2])/gridres[1],abs(gridres[0]-d[2])/sqrt(gridres[1]**2+d[3]**2)))
-        #  diff+= [((gridres[0]-d[2])/d[2]) ,]
-        #  nstd+= [abs((gridres[0]-d[2])/sqrt(gridres[1]**2+d[3]**2)) ,]
-        # print 'N points:          ', len(diff)
-        # print 'sum diff:          ', np.sum(diff)
-        # print 'sum abs diff:      ', np.sum(np.abs(diff))
-        # print 'mean sgn diff [%]: ', np.mean(diff)*100.
-        # print 'mean abs diff [%]: ', np.mean(np.abs(diff))*100.
-        # print 'medn abs diff [%]: ', np.median(np.abs(diff))*100.
-        # print
-        # print 'mean nstd: ', np.mean(nstd)
-        # print 'medn nstd: ', np.median(nstd)
-        # print '68 %-ile:   ', np.percentile(nstd,68.3)
-        # print '95 %-ile:   ', np.percentile(nstd,95.45)
-        # print '99 %-ile:   ', np.percentile(nstd,99.73)
-        ##  print 'input data: ',d,
-        ##  print interpolate.splev(float(d[0]),cdf),
-        ##  print a.interpolate(interpolate.splev(d[0],cdf),d[1]),
-        ##  print a.interpolate(interpolate.splev(d[0],cdf),d[1])/d[2]
-        #
-        # xmax=1.0
-        # fout.close()
-        #
-        # if(True): #plot
-        #  fig3=plt.figure()
-        #  ax3 = fig3.add_subplot(111, projection='3d')
-        #
-        #  x_grid = np.arange(0, xmax+.00001, 0.01)
-        #  y_grid = np.arange(0, 1.00001, 0.01)
-        #  x_grid, y_grid = np.meshgrid(x_grid, y_grid)
-        #
-        #  ax3.set_xlabel(r'f(s)')
-        #  ax3.set_ylabel(u'| cos(\u03B8) |')
-        #  #ax3.set_ylabel(u'| cos() |')
-        #  ax3.set_zlabel(r'M^2')
-        #  ax3.set_xlim(0.,xmax)
-        ##  ax3.set_zlim(0.,6e-6)
         #
         #
         #
-        ##plot interpolation
-        #  #z1_grid = a.interpolators[0].ev(x_grid,y_grid)
-        #  #z1_grid = a.interpolators[0](x_grid,y_grid)
-        #  z1_grid = a(x_grid,y_grid,selectsample=0)
-        #  ax3.plot_surface(x_grid, y_grid, z1_grid,color='yellow',alpha=0.4)
         #
-        #  #z1_grid = a.interpolators[1](x_grid,y_grid)
-        #  z1_grid = a(x_grid,y_grid,selectsample=1)
-        #  ax3.plot_surface(x_grid, y_grid, z1_grid,color='orange',alpha=0.4)
         #
-        ## input points
-        #  ax3.scatter(*(dataInUniformFlat.T),s=5)
-        ##  for d in dataInUniformFlat:
-        ##    ax3.plot([d[0],d[0]],[d[1],d[1]],[d[2]-d[3],d[2]+d[3]],'_',color='black')
         #
-        ##grid
-        #  temp=[[x[0],x[1],y] for x,y in a.gridpoints(flag='x',extendToBorder=False,returnError=False) ]
-        #  ax3.scatter(*(zip(*temp)),color='red',s=20)
-        #  temp=[[x[0],x[1],y,e] for x,y,e in a.gridpoints(flag='x',extendToBorder=False,returnError=True )]
-        ##  for d in temp:
-        ##    ax3.plot([d[0],d[0]],[d[1],d[1]],[d[2]-d[3],d[2]+d[3]],'|',color='red')
-        #  z1_grid=a(x_grid,y_grid)
-        ##  temp=[[x,x,a.interpolate(x[0],x[1])[0]] for x,y in zip(x_grid,y_grid) ]
-        ##  ax3.plot_surface(x_grid,y_grid,z1_grid,color='red',s=20)
-        ##  ax3.scatter(*(zip(*temp)),color='orange',s=20)
-        ##
-        #  tempdata=[ [x0,x1,y-a.interpolate(x0,x1)[0]] for x0,x1,y,e in dataInUniformFlat ]
-        #  fig4=plt.figure()
-        #  ax4 = fig4.add_subplot(111, projection='3d')
-        #  ax4.scatter(*(zip(*tempdata)))
-        #  ax4.set_title("absolute difference")
-        #  ax4.set_xlim(0.,xmax)
-        #  ax4.set_zlim(-6e-6,6e-6)
-        #
-        #  tempdata=[ [x0,x1,(y-a.interpolate(x0,x1)[0])/y] for x0,x1,y,e in dataInUniformFlat ]
-        #  fig5=plt.figure()
-        #  ax5 = fig5.add_subplot(111, projection='3d')
-        #  ax5.scatter(*(zip(*tempdata)))
-        #  ax5.set_title("relative difference")
-        #  ax5.set_xlim(0.,xmax)
-        #  ax5.set_zlim(-1.5,1.5)
-        #
-        #  tempdata=[ [x0,x1,(y-a.interpolate(x0,x1)[0])/sqrt(e**2+a.interpolate(x0,x1)[1]**2)] for x0,x1,y,e in dataInUniformFlat ]
-        #  fig6=plt.figure()
-        #  ax6 = fig6.add_subplot(111, projection='3d')
-        #  ax6.scatter(*(zip(*tempdata)))
-        #  ax6.set_title("#std. dev.")
-        #  ax6.set_xlim(0.,xmax)
-        #
-        ##  z1_grid *= poly(x_grid)
-        ##
-        ###  ax.plot_surface(x_grid, y_grid, z1_grid,color='yellow')
-        ##  temp=[[list(a.x(x))[0],list(a.x(x))[1],y*poly(a.x(x)[0])] for x,y in a.gridpoints() ]
-        ##  ax3.scatter(*(dataInUniform.T))
-        ##  ax3.scatter(*(zip(*temp)),color='red')
-        #  #print temp
-        #  plt.show()
-        #  ##with np.loadtxt(selected_grid) as data:
-        #  ##  for d in data:
-        #  #

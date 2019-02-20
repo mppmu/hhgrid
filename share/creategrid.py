@@ -75,7 +75,7 @@ class Grid:
             if (data):
                 self.addPoint(data)
         else:
-            nneighbor = 5
+            nneighbor = 9
             nsamples = 1
 
             def linfunc(x, a, b, c):

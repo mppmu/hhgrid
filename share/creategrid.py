@@ -8,6 +8,8 @@ import scipy.optimize
 from math import sqrt
 import random
 import os
+import yaml
+import re
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -17,11 +19,11 @@ import mpl_toolkits.mplot3d.axes3d as axes3d
 #from phasespace import *
 
 class Bin:
-    def __init__(self):
-        self.n = 0
-        self.y = 0.
-        self.y2 = 0.
-        self.e2 = 0.
+    def __init__(self,n=0,y=0.,y2=0.,e2=0.):
+        self.n = n
+        self.y = y
+        self.y2 = y2
+        self.e2 = e2
 
     def add(self, y, e=0.):
         self.n += 1
@@ -50,7 +52,17 @@ class Bin:
         return str(str(self.n) + ' ' + str(self.getres()))
 
 class Grid:
-    def __init__(self, method, dim, xmin, xmax, nbin, data=[], binned=False):
+    def __init__(self, method=None, dim=None, xmin=None, xmax=None, nbin=None, data=None, binned=False, grid_yaml=None):
+        if grid_yaml:
+            self.load(grid_yaml)
+            return
+        assert method is not None, "must specify method"
+        assert dim is not None, "must specify dim"
+        assert xmin is not None, "must specify xmin"
+        assert xmax is not None, "must specify xmax"
+        assert nbin is not None, "must specify nbin"
+        assert data is not None, "must specify data"
+
         self.dim = dim
         self.xmin = np.array(xmin, dtype=float)
         self.xmax = np.array(xmax, dtype=float)
@@ -59,6 +71,7 @@ class Grid:
         self.method = method
         self.lowclip = 1e-20 # error and 1/error clipped to [lowclip,highclip], this improves the numerical stability of the fit
         self.highclip = 1e20
+        self.nneighbour = 9
 
         self.dx = np.abs((self.xmin - self.xmax).astype(float) / self.nbin)
 
@@ -75,7 +88,6 @@ class Grid:
             if (data):
                 self.addPoint(data)
         else:
-            nneighbor = 9
             nsamples = 1
 
             def linfunc(x, a, b, c):
@@ -91,7 +103,7 @@ class Grid:
                 for k in np.ndindex(tuple(self.nbin)):
                     x = self.xmin + k * self.dx
                     all_points = np.array(sorted(dat, key=lambda p: np.linalg.norm(p[:self.dim] - x)))
-                    nearest_points = all_points[:nneighbor]
+                    nearest_points = all_points[:self.nneighbour]
 
                     bin_lower =  self.xmin + k * self.dx
                     bin_upper = self.xmin + (np.array(k)+1) * self.dx
@@ -106,7 +118,7 @@ class Grid:
                     bin_upper -= shift * self.dx
 
                     # Include points in fit that fall into current bin
-                    bin_points = all_points[nneighbor:]
+                    bin_points = all_points[self.nneighbour:]
                     bin_points = bin_points[bin_points[:,0] > bin_lower[0]]
                     bin_points = bin_points[bin_points[:,1] > bin_lower[1]]
                     bin_points = bin_points[bin_points[:,0] < bin_upper[0]]
@@ -162,6 +174,55 @@ class Grid:
                        0.9  1      1.1  1      1      0.5     0.0025   0.02
                        ==> use cov2 if chisq>>1, cov1 if chisq<1
                     '''
+
+    def dump(self):
+        # Dump the current grid to a dictionary
+        def yaml_formatter(value):
+            if isinstance(value,int):
+                return str(value)
+            elif isinstance(value, float):
+                return "{:.20e}".format(value)
+            else:
+                raise Exception('yaml_formatter has no rule for value of type ' + type(value))
+        # Create dict for yaml
+        grid_yaml = {}
+        grid_yaml['method'] = str(self.method)
+        grid_yaml['dim'] = str(self.dim)
+        grid_yaml['xmin'] = [ "{:.20e}".format(x) for x in self.xmin.tolist() ]
+        grid_yaml['xmax'] = [ "{:.20e}".format(x) for x in self.xmax.tolist() ]
+        grid_yaml['nbin'] = map(str,self.nbin.tolist())
+        grid_yaml['binned'] = int(self.binned)
+        grid_yaml['lowclip'] = "{:.20e}".format(self.lowclip)
+        grid_yaml['highclip'] = "{:.20e}".format(self.highclip)
+        grid_yaml['nneighbour'] = str(self.nneighbour)
+        grid_yaml['dx'] = [ "{:.20e}".format(x) for x in self.dx.tolist() ]
+        grid_yaml['bins'] = {}
+        # grid_yaml['deg'] = self.deg # Not saved
+        # grid_yaml['pol'] = self.pol # Not saved
+        for key, value in self.data.items():
+            grid_yaml['bins'][str(key)] = {k: yaml_formatter(v) for k,v in vars(value).items()}
+        return grid_yaml
+
+    def load(self,grid_yaml):
+        # Load the grid from a dictionary
+        self.method = int(grid_yaml['method'])
+        self.dim = int(grid_yaml['dim'])
+        self.xmin = np.array( map(float, grid_yaml['xmin']) )
+        self.xmax = np.array( map(float, grid_yaml['xmax']) )
+        self.nbin = np.array(map(int,grid_yaml['nbin']))
+        self.binned = bool(grid_yaml['binned'])
+        self.lowclip = np.array(float(grid_yaml['lowclip']))
+        self.highclip = np.array(float(grid_yaml['highclip']))
+        self.nneighbour = int(grid_yaml['nneighbour'])
+        self.dx = np.array( map(float, grid_yaml['dx']) )
+        self.data = {}
+        self.deg = {}  # degree of interpolation poynomial (Note: not saved)
+        self.pol = {}  # coefficients of interpolation polynomial (Note: not saved)
+        key_pattern = re.compile( r'\(\s*([0-9]+)\s*,\s*([0-9]+)\s*\)' )
+        for key,value in grid_yaml['bins'].items():
+            key_match = key_pattern.search(key.strip())
+            k = ( int(key_match.group(1)),int(key_match.group(2)) )
+            self.data[k] = Bin( int(value['n']), float(value['y']), float(value['y2']), float(value['e2']) )
 
     def polyfit2d(self, x, y, z, orders):
         ncols = np.prod(orders + 1)
@@ -221,7 +282,7 @@ class Grid:
 
     def printgrid(self):
         for k, d in self.data.iteritems():
-            print('k: ' + str(k) + ' d: ' + str(d) + ' d.n:' + str(d.n))
+            print('k: ' + str(k) + ' d.n: ' + str(d.n) + ' d.y: ' + str(d.y) + ' d.y2: ' + str(d.y2) + ' d.e2: ' + str(d.e2))
 
     def addPoint(self, data):
         if (type(data[-1]) is float or type(data[-1]) is np.float64):
@@ -286,46 +347,77 @@ class CreateGrid:
         self.method = 1  # 1: CloughTocher;  2: Polynomial
         self.polydegree = 2
         self.tolerance = 1.e-8 # costh is nudged to 1 if within this tolerance
+        self.cdfdata = None
+        self.cdf = None
+        self.interpolator = None
 
-        # cdf: transformation x=f(beta) leading to uniform distributions of points in x
-        self.cdfdata = np.loadtxt(os.path.join(self.selected_grid_dirname,'events.cdf'))
-        self.cdf = interpolate.splrep(*self.cdfdata.T, k=1)
+        if os.path.splitext(self.selected_grid)[1].strip() == ".yaml":
+            # If input file is a .yaml file then grid can be loaded directly from the yaml
 
-        x0, x1, y, e = np.loadtxt(self.selected_grid, unpack=True)
+            # Load yaml file
+            with open(self.selected_grid, 'r') as infile:
+                grid_yaml = yaml.load(infile)
 
-        # print('== Plotting Input Points ==')
-        # fig = plt.figure(dpi=100)
-        # ax = fig.add_subplot(111, projection='3d')
-        # fig.suptitle('Input points')
-        # ax.plot(x0, x1, y, linestyle="None", marker="o")
-        # #for i in np.arange(0, len(x0)):
-        # #    ax.plot([x0[i], x0[i]], [x1[i], x1[i]],
-        # #            [y[i] + e[i], y[i] - e[i]], marker="_")
-        # ax.set_xlabel('beta')
-        # ax.set_ylabel('cos(theta)')
-        # ax.set_xlim3d(0., 1.)
-        # ax.set_ylim3d(0., 1.)
-        # plt.show()
+            # Parse cdfdata
+            self.cdfdata = np.array(grid_yaml['cdfdata'], dtype=float)
+            self.cdf = interpolate.splrep(*self.cdfdata.T, k=1)
 
-        x0Uniform = interpolate.splev(x0, self.cdf)
+            # Initialise grid
+            self.interpolator = Grid(grid_yaml=grid_yaml)
+            self.interpolator.initInterpolation(1)
 
-        # print('== Plotting Transformed Points ==')
-        # fig = plt.figure(dpi=100)
-        # ax = fig.add_subplot(111, projection='3d')
-        # fig.suptitle('Transformed points')
-        # ax.plot(x0Uniform, x1, y, linestyle="None", marker="o")
-        # # for i in np.arange(0, len(x0Uniform)):
-        # #     ax.plot([x0Uniform[i], x0Uniform[i]], [x1[i], x1[i]],
-        # #             [y[i] + e[i], y[i] - e[i]], marker="_")
-        # ax.set_xlabel('beta')
-        # ax.set_ylabel('cos(theta)')
-        # ax.set_xlim3d(0., 1.)
-        # ax.set_ylim3d(0., 1.)
-        # plt.show()
+        else:
+            # Generate grid via fitting/binning
 
-        dataInUniformFlat = np.array([x0Uniform, x1, y, e]).T
-        self.interpolator = Grid(self.method, 2, (0, 0), (1, 1), (100, 30), data=dataInUniformFlat, binned=False)
-        self.interpolator.initInterpolation(1)
+            # cdf: transformation x=f(beta) leading to uniform distributions of points in x
+            self.cdfdata = np.loadtxt(os.path.join(self.selected_grid_dirname,'events.cdf'))
+            self.cdf = interpolate.splrep(*self.cdfdata.T, k=1)
+
+            x0, x1, y, e = np.loadtxt(self.selected_grid, unpack=True)
+
+            # print('== Plotting Input Points ==')
+            # fig = plt.figure(dpi=100)
+            # ax = fig.add_subplot(111, projection='3d')
+            # fig.suptitle('Input points')
+            # ax.plot(x0, x1, y, linestyle="None", marker="o")
+            # #for i in np.arange(0, len(x0)):
+            # #    ax.plot([x0[i], x0[i]], [x1[i], x1[i]],
+            # #            [y[i] + e[i], y[i] - e[i]], marker="_")
+            # ax.set_xlabel('beta')
+            # ax.set_ylabel('cos(theta)')
+            # ax.set_xlim3d(0., 1.)
+            # ax.set_ylim3d(0., 1.)
+            # plt.show()
+
+            x0Uniform = interpolate.splev(x0, self.cdf)
+
+            # print('== Plotting Transformed Points ==')
+            # fig = plt.figure(dpi=100)
+            # ax = fig.add_subplot(111, projection='3d')
+            # fig.suptitle('Transformed points')
+            # ax.plot(x0Uniform, x1, y, linestyle="None", marker="o")
+            # # for i in np.arange(0, len(x0Uniform)):
+            # #     ax.plot([x0Uniform[i], x0Uniform[i]], [x1[i], x1[i]],
+            # #             [y[i] + e[i], y[i] - e[i]], marker="_")
+            # ax.set_xlabel('beta')
+            # ax.set_ylabel('cos(theta)')
+            # ax.set_xlim3d(0., 1.)
+            # ax.set_ylim3d(0., 1.)
+            # plt.show()
+
+            dataInUniformFlat = np.array([x0Uniform, x1, y, e]).T
+            self.interpolator = Grid(self.method, 2, (0, 0), (1, 1), (100, 30), data=dataInUniformFlat, binned=False)
+            self.interpolator.initInterpolation(1)
+
+    def dump(self):
+        # Produce a .yaml snapshot of the current CreateGrid instance
+        grid_yaml = self.interpolator.dump()
+        # Append cdf data to grid_yaml
+        grid_yaml['cdfdata'] = [ ["{:.20e}".format(ix) for ix in x] for x in self.cdfdata.tolist()]
+        # Output yaml file representing grid
+        filename_yaml = os.path.splitext(self.selected_grid)[0].strip() + '.yaml'
+        with open(filename_yaml, 'w') as outfile:
+            yaml.dump(grid_yaml, outfile, default_flow_style=False)
 
     def u(self, s, t):
         return 2 * self.mHs - s - t
@@ -351,8 +443,8 @@ class CreateGrid:
         xUniform = interpolate.splev(b, self.cdf)
         return self.interpolator.interpolate(xUniform, cth)[0]
 
-    def TestClosure(self):
-        b, cth, y, e = np.loadtxt(self.selected_grid, unpack=True)
+    def TestClosure(self,closure_grid):
+        b, cth, y, e = np.loadtxt(closure_grid, unpack=True)
         percent_deviations = []
         std_deviations = []
         for b_value, cth_value, y_value, e_value in zip(b,cth,y,e):

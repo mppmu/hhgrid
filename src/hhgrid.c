@@ -230,8 +230,12 @@ PyObject* grid_initialize(const char* grid_name)
 
 double grid_virt(PyObject* grid, double s, double t)
 {
-
     PyObject* pResult = PyObject_CallMethod(grid, "GetAmplitude", "(ff)", s, t);
+    if(pResult == NULL)
+    {
+        PyErr_Print();
+        printf("ERROR: Failed to compute result\n");
+    }
     assert(pResult != NULL);
 
     double result = PyFloat_AsDouble(pResult);

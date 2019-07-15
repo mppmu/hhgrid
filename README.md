@@ -1,4 +1,3 @@
-[![Build Status](https://travis-ci.org/mppmu/hhgrid.svg?branch=master)](https://travis-ci.org/mppmu/hhgrid)
 
 # hhgrid
 
@@ -29,11 +28,13 @@ If you use this code please cite the paper in which the grid was constructed  an
 
 Pre-requisites:
 * `python` (tested for 2.7.13)
+* `pyyaml` (tested for 3.13)
 * `numpy` (tested for 1.11.1)
 * `scipy` (tested for 0.17.1, requires at least 0.14.0)
 
-Assuming you have `python` you can check for the availability of `numpy` and `scipy` with the commands:
+Assuming you have `python` you can check for the availability of `yaml`, `numpy` and `scipy` with the commands:
 ```shell
+python -c "import yaml"
 python -c "import numpy"
 python -c "import scipy"
 ```

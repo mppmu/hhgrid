@@ -20,6 +20,7 @@ Physical parameters are set to:
 Authors: G. Heinrich, S.P. Jones, M. Kerner, G. Luisoni, E. Vryonidou
  
 If you use this code please cite the paper in which the grid was constructed  and the original calculation papers:
+* [arXiv:1907.06408](https://arxiv.org/abs/1907.06408)
 * [JHEP 1708 (2017) 088, arXiv:1703.09252](https://inspirehep.net/record/1519840)
 * [JHEP 1610 (2016) 107, arXiv:1608.04798](https://inspirehep.net/record/1481820)
 * [PRL 117 (2016) 012001, Erratum 079901, arXiv:1604.06447](https://inspirehep.net/record/1450011)

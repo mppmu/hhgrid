@@ -18,6 +18,10 @@ parser.add_argument("-n","--noerror", dest="noerror",
                     action="store_true",
                     help='do not rescale error by alphas')
 
+parser.add_argument("-p","--putas", dest="putas",
+                    action="store_true",
+                    help='multiply (rather than divide) by alphas')
+
 args = parser.parse_args()
 
 mHs = 125.**2
@@ -33,9 +37,15 @@ for beta, cost, vfin, vfinerr in input_grid:
     mursq=s(beta)/4
     alphas = pdf.alphasQ2(mursq)
     if args.noerror:
-        output_grid.append([beta, cost, vfin/(alphas**2), vfinerr])
+        if args.putas:
+            output_grid.append([beta, cost, vfin*(alphas**2), vfinerr])
+        else:
+            output_grid.append([beta, cost, vfin/(alphas**2), vfinerr])
     else:
-        output_grid.append([beta, cost, vfin / (alphas ** 2), vfinerr/(alphas**2)])
+        if args.putas:
+            output_grid.append([beta, cost, vfin*(alphas ** 2), vfinerr*(alphas**2)])
+        else:
+            output_grid.append([beta, cost, vfin/(alphas ** 2), vfinerr/(alphas**2)])
 
 with open(args.outfile, 'w') as output_file:
     wr = csv.writer(output_file, delimiter=" ")

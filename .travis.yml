@@ -107,3 +107,8 @@ install:
   - make
 script:
   - make check
+  - cat check/test_c_grid.sh.log
+  - cat check/test_cpp_grid.sh.log
+  - cat check/test_f90_grid.sh.log
+
+

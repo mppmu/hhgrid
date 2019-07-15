@@ -43,6 +43,9 @@ int main()
     double expected;
     double s;
     double t;
+    
+    std::cout.precision(15);
+    std::cout << std::scientific;
 
     // Initialise python and grid
     python_initialize();

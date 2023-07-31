@@ -10,14 +10,6 @@ from math import sqrt
 import random
 import os, time
 
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import pylab as pl
-from mpl_toolkits.mplot3d import Axes3D
-
-pl.rc('text',usetex=True) # Use LaTex
-pl.rcParams['text.latex.preamble']=r'\usepackage{amstext}\newcommand{\dd}{\mathrm{d}},\mathchardef\mhyphen="2D'
-
 class Bin:
     def __init__(self,n=0,y=0.,y2=0.,e2=0.):
         self.n = n
@@ -444,6 +436,13 @@ class CreateGrid:
         return self.interpolator.interpolate(xUniform, cth)[0]
 
     def TestClosure(self,closure_grid):
+        import matplotlib as mpl
+        import matplotlib.pyplot as plt
+        import pylab as pl
+        from mpl_toolkits.mplot3d import Axes3D
+        #pl.rc('text',usetex=true) # Use LaTex
+        #pl.rcParams['text.latex.preamble']=r'\usepackage{amstext}\newcommand{\dd}{\mathrm{d}},\mathchardef\mhyphen="2D'
+        
         b, cth, y, e = np.loadtxt(closure_grid, unpack=True)
 
         percent_deviations = []
@@ -455,28 +454,28 @@ class CreateGrid:
             #print (b_value, cth_value, y_value, self.interpolator.interpolate(xUniform, cth_value))
         percent_deviations = np.array(percent_deviations)
         std_deviations = np.array(std_deviations)
-
-        #
-        # Plot of grid points vs input points
-        #
-        x0Uniform = interpolate.splev(b, self.cdf)
-        y_grid = []
-        for x,c in zip(x0Uniform,cth):
-            y_grid.append(self.interpolator.interpolate(x, c)[0])
-        fig = plt.figure(dpi=100)
-        ax = fig.add_subplot(111, projection='3d')
-        fig.suptitle('Closure test')
-        ax.plot(x0Uniform, cth, y, linestyle="None", marker="o")
-        ax.plot(x0Uniform, cth, y_grid, linestyle="None", marker="x")
-        # Error bars
-        # for i in np.arange(0, len(x0Uniform)):
-        #     ax.plot([x0Uniform[i], x0Uniform[i]], [cth[i], cth[i]],
-        #             [y[i] + e[i], y[i] - e[i]], marker="_")
-        ax.set_xlabel('beta')
-        ax.set_ylabel('cos(theta)')
-        ax.set_xlim3d(0., 1.)
-        ax.set_ylim3d(0., 1.)
-        plt.show()
+        
+        ##
+        ## Plot of grid points vs input points
+        ##
+        #x0Uniform = interpolate.splev(b, self.cdf)
+        #y_grid = []
+        #for x,c in zip(x0Uniform,cth):
+        #    y_grid.append(self.interpolator.interpolate(x, c)[0])
+        #fig = plt.figure(dpi=100)
+        #ax = fig.add_subplot(111, projection='3d')
+        #fig.suptitle('Closure test')
+        #ax.plot(x0Uniform, cth, y, linestyle="None", marker="o")
+        #ax.plot(x0Uniform, cth, y_grid, linestyle="None", marker="x")
+        ## Error bars
+        ## for i in np.arange(0, len(x0Uniform)):
+        ##     ax.plot([x0Uniform[i], x0Uniform[i]], [cth[i], cth[i]],
+        ##             [y[i] + e[i], y[i] - e[i]], marker="_")
+        #ax.set_xlabel('beta')
+        #ax.set_ylabel('cos(theta)')
+        #ax.set_xlim3d(0., 1.)
+        #ax.set_ylim3d(0., 1.)
+        #pl.savefig('closure'+str(closure_grid)+'.pdf',bbox_inches='tight')
 
         #
         # Percent deviation of grid from central value of point
@@ -487,14 +486,13 @@ class CreateGrid:
         plt.xlabel(r'$\mathrm{difference\ [\%]}$')
         plt.ylabel(r'$N_\mathrm{{points}}$')
         pl.savefig('percent_difference_'+str(closure_grid)+'.pdf',bbox_inches='tight')
-        plt.show()
 
-        #
-        # Number of standard deviations between grid and point
-        #
-        # print(std_deviations)
-        # bins = np.arange(-11,11,2)
-        # _, _, _ = plt.hist(np.clip(std_deviations, bins[0], bins[-1]), bins=bins, facecolor='r', alpha=0.75, edgecolor='black', linewidth=1.2)
-        # plt.xlabel('Standard Deviation')
-        # plt.ylabel('Npoints')
-        # plt.show()
+        ##
+        ## Number of standard deviations between grid and point
+        ##
+        ## print(std_deviations)
+        ## bins = np.arange(-11,11,2)
+        ## _, _, _ = plt.hist(np.clip(std_deviations, bins[0], bins[-1]), bins=bins, facecolor='r', alpha=0.75, edgecolor='black', linewidth=1.2)
+        ## plt.xlabel('Standard Deviation')
+        ## plt.ylabel('Npoints')
+        ## plt.show()

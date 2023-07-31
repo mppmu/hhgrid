@@ -28,7 +28,7 @@ If you use this code please cite the paper in which the grid was constructed  an
 ## Installation
 
 Pre-requisites:
-* `python` (tested for 3.10.9)
+* `python` (tested for 3.11.3)
 * `pyyaml` (tested for 6.0)
 * `numpy` (tested for 1.24.2)
 * `scipy` (tested for 1.10.1)

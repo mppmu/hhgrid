@@ -229,7 +229,7 @@ AC_DEFUN([AX_PYTHON_CSPEC],
             AC_MSG_ERROR([Python Prefix is not known])
         fi
         ax_python_execprefix=`${PYTHON} -c "import sys; print(sys.exec_prefix)"`
-        ax_python_version=`$PYTHON -c "import sys; print(sys.version[[:3]])"`
+        ax_python_version=`$PYTHON -c "import sys; print('.'.join(sys.version.split('.')[[0:2]]))"`
         ax_python_includespec="-I${ax_python_prefix}/include/python${ax_python_version}"
         if test x"$python_prefix" != x"$python_execprefix"; then
             ax_python_execspec="-I${ax_python_execprefix}/include/python${ax_python_version}"

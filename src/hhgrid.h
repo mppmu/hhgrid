@@ -1,7 +1,7 @@
 #ifndef _hhgrid_H_
 #define _hhgrid_H_
 
-#include <python2.7/Python.h>
+#include <Python.h>
 
 extern void python_initialize(void);
 extern void python_decref(PyObject* grid);

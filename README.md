@@ -28,16 +28,16 @@ If you use this code please cite the paper in which the grid was constructed  an
 ## Installation
 
 Pre-requisites:
-* `python` (tested for 2.7.13)
-* `pyyaml` (tested for 3.13)
-* `numpy` (tested for 1.11.1)
-* `scipy` (tested for 0.17.1, requires at least 0.14.0)
+* `python` (tested for 3.10.9)
+* `pyyaml` (tested for 6.0)
+* `numpy` (tested for 1.24.2)
+* `scipy` (tested for 1.10.1)
 
 Assuming you have `python` you can check for the availability of `yaml`, `numpy` and `scipy` with the commands:
 ```shell
-python -c "import yaml"
-python -c "import numpy"
-python -c "import scipy"
+python3 -c "import yaml"
+python3 -c "import numpy"
+python3 -c "import scipy"
 ```
 If no output is given from these commands then the packages are available.
  

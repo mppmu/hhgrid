@@ -1,4 +1,5 @@
 import numpy as np
+import re
 import math
 import operator
 import itertools
@@ -7,16 +8,15 @@ import scipy
 import scipy.optimize
 from math import sqrt
 import random
-import os
-import yaml
-import re
+import os, time
 
-#import matplotlib as mpl
-#import matplotlib.pyplot as plt
-#import mpl_toolkits.mplot3d.axes3d as axes3d
-#import pylab as pl
-#import statsmodels.api as sm
-#from phasespace import *
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import pylab as pl
+from mpl_toolkits.mplot3d import Axes3D
+
+pl.rc('text',usetex=True) # Use LaTex
+pl.rcParams['text.latex.preamble']=r'\usepackage{amstext}\newcommand{\dd}{\mathrm{d}},\mathchardef\mhyphen="2D'
 
 class Bin:
     def __init__(self,n=0,y=0.,y2=0.,e2=0.):
@@ -253,12 +253,12 @@ class Grid:
 
     def gridpoints(self, sample=False, flag='k', extendToBorder=False, returnError=False):
         if flag == 'k':
-            return [[k, d.gety(sample)] for k, d in self.data.iteritems()]
+            return [[k, d.gety(sample)] for k, d in self.data.items()]
         if flag == 'x':
             if (returnError):
-                res = [[self.x(k), d.gety(sample), d.gete()] for k, d in self.data.iteritems()]
+                res = [[self.x(k), d.gety(sample), d.gete()] for k, d in self.data.items()]
             else:
-                res = [[self.x(k), d.gety(sample)] for k, d in self.data.iteritems()]
+                res = [[self.x(k), d.gety(sample)] for k, d in self.data.items()]
             if (extendToBorder):
                 for d in range(self.dim):
                     nbin = self.nbin.copy()
@@ -271,14 +271,14 @@ class Grid:
                         k[d] = self.nbin[d] - 1
                         x[d] = self.xmax[d]
                         res += [[x.copy(), self.data[tuple(k)].gety(sample)], ]
-                        #            print "b", self.xmin,self.xmax
+                        #            print("b", self.xmin,self.xmax)
                 for corner in np.ndindex(tuple([2, ] * self.dim)):
                     k = corner * (self.nbin - 1)
                     x = np.array(corner, float)
                     res += [[x.copy(), self.data[tuple(k)].gety(sample)], ]
             return res
         if flag == 'plain':
-            return [self.x(k).tolist() + [d.gety(sample), ] for k, d in self.data.iteritems()]
+            return [self.x(k).tolist() + [d.gety(sample), ] for k, d in self.data.items()]
 
     def printgrid(self):
         for k, d in self.data.iteritems():
@@ -298,7 +298,7 @@ class Grid:
         self.interpolators = []
         self.nsamples = nsamples
         for i in range(nsamples):
-            temp = zip(*self.gridpoints(sample=(nsamples != 1), flag='x', extendToBorder=True))
+            temp = list(zip(*self.gridpoints(sample=(nsamples != 1), flag='x', extendToBorder=True)))
             self.interpolators.append(interpolate.CloughTocher2DInterpolator(list(temp[0]), temp[1], fill_value=0.))
 
             # polynomial interpolation
@@ -313,7 +313,7 @@ class Grid:
                 xx = self.x(k)
                 dat = [np.append(self.x(x + kmin), self.data[tuple(x + kmin)].gety(sample=(nsamples != 1))) for x in
                        np.ndindex(*(degree + 1))]
-                x, y, z = np.asarray(zip(*dat))
+                x, y, z = np.asarray(list(zip(*dat)))
                 self.pol[k, i] = self.polyfit2d(x, y, z, orders=degree)
 
     def interpolate(self, x, y, selectsample=-1):
@@ -445,13 +445,14 @@ class CreateGrid:
 
     def TestClosure(self,closure_grid):
         b, cth, y, e = np.loadtxt(closure_grid, unpack=True)
+
         percent_deviations = []
         std_deviations = []
         for b_value, cth_value, y_value, e_value in zip(b,cth,y,e):
             xUniform = interpolate.splev(b_value, self.cdf)
             percent_deviations.append( 100.*(y_value-self.interpolator.interpolate(xUniform, cth_value)[0])/y_value )
             std_deviations.append( (y_value-self.interpolator.interpolate(xUniform, cth_value)[0])/e_value )
-            print (b_value, cth_value, y_value, self.interpolator.interpolate(xUniform, cth_value))
+            #print (b_value, cth_value, y_value, self.interpolator.interpolate(xUniform, cth_value))
         percent_deviations = np.array(percent_deviations)
         std_deviations = np.array(std_deviations)
 
@@ -480,19 +481,20 @@ class CreateGrid:
         #
         # Percent deviation of grid from central value of point
         #
-        print(percent_deviations)
-        bins = np.arange(-51,51,2)
-        _, _, _ = plt.hist(np.clip(percent_deviations, bins[0], bins[-1]), bins=bins, facecolor='r', alpha=0.75, edgecolor='black', linewidth=1.2)
-        plt.xlabel('difference [%]')
-        plt.ylabel('Npoints')
+        #print(percent_deviations)
+        bins = np.arange(-20.25,20.25,0.5)
+        _, _, _ = plt.hist(np.clip(percent_deviations, bins[0], bins[-1]), bins=bins, histtype='step', edgecolor='red', linewidth=1)
+        plt.xlabel(r'$\mathrm{difference\ [\%]}$')
+        plt.ylabel(r'$N_\mathrm{{points}}$')
+        pl.savefig('percent_difference_'+str(closure_grid)+'.pdf',bbox_inches='tight')
         plt.show()
 
         #
         # Number of standard deviations between grid and point
         #
-        print(std_deviations)
-        bins = np.arange(-11,11,2)
-        _, _, _ = plt.hist(np.clip(std_deviations, bins[0], bins[-1]), bins=bins, facecolor='r', alpha=0.75, edgecolor='black', linewidth=1.2)
-        plt.xlabel('Standard Deviation')
-        plt.ylabel('Npoints')
-        plt.show()
+        # print(std_deviations)
+        # bins = np.arange(-11,11,2)
+        # _, _, _ = plt.hist(np.clip(std_deviations, bins[0], bins[-1]), bins=bins, facecolor='r', alpha=0.75, edgecolor='black', linewidth=1.2)
+        # plt.xlabel('Standard Deviation')
+        # plt.ylabel('Npoints')
+        # plt.show()

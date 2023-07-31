@@ -12,7 +12,7 @@ parser.add_argument("-g", "--grid", dest="grid",
 args = parser.parse_args()
 
 # Initialise Grid
-print '== Initialising Grid =='
+print('== Initialising Grid ==')
 grid = creategrid.CreateGrid(args.grid)
 
 # Python function that we want to call via pyFuncCallPipe
@@ -20,7 +20,7 @@ def func(arg):
     s,t=map(lambda e: float(e),arg.split(','))
     return grid.GetAmplitude(s,t)
 
-print '== Ready to evaluate function =='
+print('== Ready to evaluate function ==')
 
 # Read from user input
 # print result to screen
@@ -33,6 +33,6 @@ while True:
 
     res = "{:.40e}".format(func(line))
 
-    print res
+    print(res)
 
-print '== Exiting =='
+print('== Exiting ==')

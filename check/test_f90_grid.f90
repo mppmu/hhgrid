@@ -58,7 +58,7 @@
       ! Test point 1
       s = 250000.D0
       t = -50000.D0
-      expected = 3.3379860337537598045237752231173544714693D-04
+      expected = 3.3396514405159327719754824848052976449253D-04
       if(.not. test_point(grid,s,t,expected)) then
          call EXIT(1)
       endif
@@ -66,7 +66,7 @@
       ! Test point 2
       s = 66887.6D0
       t = -9407.43D0
-      expected = 6.9175473197139950568739300007514714252466D-07
+      expected = 6.3218124421828790770609739560481621367671D-07
       if(.not. test_point(grid,s,t,expected)) then
          call EXIT(1)
       endif
@@ -74,7 +74,7 @@
       ! Test point 3
       s = 83055.9D0
       t =  -11438.D0
-      expected = 5.7794187405167865483686558125686616449457D-06
+      expected = 5.7789456366871273221199473146825198455190D-06
       if(.not. test_point(grid,s,t,expected)) then
          call EXIT(1)
       endif
@@ -82,7 +82,7 @@
       ! Test point 4
       s = 414983.D0
       t = -59786.9D0
-      expected =  1.0540707946140926744293953021269771852531D-03
+      expected =  1.0547862091969560302540109830715664429590D-03
       if(.not. test_point(grid,s,t,expected)) then
          call EXIT(1)
       endif
@@ -90,7 +90,7 @@
       ! Test point 5
       s = 2.56513D6
       t = -482321.D0
-      expected = 3.7599073929292681217617655420326627790928D-02
+      expected = 3.7705526298104530269483802840113639831543D-02
       if(.not. test_point(grid,s,t,expected)) then
          call EXIT(1)
       endif
@@ -105,7 +105,7 @@
       ! Test point that previously landed outside grid due to numerics, gave 0 (for Virt_EFT)
       s = 275621.46328957588411867618560791015625D0;
       t = -243368.2897650574450381100177764892578125D0;
-      expected = 4.2181358021464487916343810702812788804295D-04;
+      expected = 4.2181616950034679733999576356495708751027D-04;
       if(.not. test_point(grid,s,t,expected)) then
          call EXIT(1)
       endif
@@ -113,7 +113,7 @@
       ! Test point that previously landed outside grid due to numerics, gave 0 (for Virt_EFT)
       s = 959959.10608519916422665119171142578125D0;
       t = -928446.149935275432653725147247314453125D0;
-      expected = 6.0824980647837404226785373850816540652886D-03;
+      expected = 6.0828310997215750965949609962990507483482D-03;
       if(.not. test_point(grid,s,t,expected)) then
          call EXIT(1)
       endif

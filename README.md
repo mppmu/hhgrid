@@ -109,7 +109,7 @@ The `hhgrid` library exposes the following functions:
 * ```void python_initialize(void)```
   A thin wrapper around the Python C API function `Py_Initialize()`, used at the beginning of your program to start the `python` interpreter.
 * ```void python_decref(PyObject* grid)```
-  A thin wrapper around the Python C API function `Py_DECREF(grid)` used to decrement the `python` interpreter reference count by 1 (required for garbage collection).
+  A thin wrapper around the Python C API function `Py_XDECREF(grid)` used to decrement the `python` interpreter reference count by 1 (required for garbage collection).
 * ```void python_finalize(void)```
   A thin wrapper around the Python C API function `Py_Finalize()` used at the end of your program to terminate the `python` interpreter.
 * ```void python_printinfo(void)```
@@ -142,11 +142,11 @@ For ease of validation we give here a few values from the `Virt_EFT.grid` along 
  
 | beta_s | cos(theta) | V_fin | V_fin Error | s | t | grid.py result |
 | --- | --- | --- | --- | --- | --- | --- |
-| 0.670215461783 | 0.942415327461   | 3.14977281395e-05 | 1e-20 | 113469. | -5274.78 | 3.186491270e-05 |
-| 0.749658272418 | 0.358719756797   | 7.18370167972e-05 | 1e-20 | 142690. | -36534.1 | 7.230060450e-05 |
-| 0.774816230102 | 0.667225193755   | 9.55249958151e-05 | 1e-20 | 156383. | -22143.3 | 9.579402805e-05 | 
-| 0.961960758291 | 0.828468885357   | 0.00450166545088  | 1e-20 | 837448. | -69395.  | 4.524576122e-03 |
-| 0.831112919562 | 0.00835036268349 | 0.000195523077174 | 1e-20 | 202101. | -84724.2 | 1.954913649e-04 |
+| 0.670215461783 | 0.942415327461   | 3.14977281395e-05 | 1e-20 | 113469. | -5274.78 | 3.156933349e-05 |
+| 0.749658272418 | 0.358719756797   | 7.18370167972e-05 | 1e-20 | 142690. | -36534.1 | 7.189039265e-05 |
+| 0.774816230102 | 0.667225193755   | 9.55249958151e-05 | 1e-20 | 156383. | -22143.3 | 9.560147722e-05 | 
+| 0.961960758291 | 0.828468885357   | 0.00450166545088  | 1e-20 | 837448. | -69395.  | 4.553265367e-03 |
+| 0.831112919562 | 0.00835036268349 | 0.000195523077174 | 1e-20 | 202101. | -84724.2 | 1.956863628e-04 |
  
 For validation the corresponding Born HTL cross-section values are:
  

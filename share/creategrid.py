@@ -222,7 +222,7 @@ class Grid:
         ij = itertools.product(range(orders[0] + 1), range(orders[1] + 1))
         for k, (i, j) in enumerate(ij):
             G[:, k] = x ** i * y ** j
-        m, _, _, _ = np.linalg.lstsq(G, z, rcond=-1)
+        m, _, _, _ = np.linalg.lstsq(G, z, rcond=None)
         return m
 
     def polyval2d(self, x, y, m, orders):

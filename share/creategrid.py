@@ -9,6 +9,295 @@ import scipy.optimize
 from math import sqrt
 import random
 import os, time
+import lhapdf
+import yaml
+
+def combinegrids(grid_temp, cHHH, ct, ctt, cg, cgg, EFTcount=3, usesmeft=0, lhaid=90400, renfac=1.):
+
+    # Grid exists, proceed
+    if os.path.exists(grid_temp):
+        return
+
+   #    -- Because the lock mechanism was not robust enough,
+   #    -- the grids are now combined in one single process (by
+   #    -- calling combinegrids() only once in the run warm-up
+   #    -- phase).
+
+    # Produce grid
+
+    # Grid numbering format
+    np.set_printoptions(formatter={'float': '{:.18E}'.format})
+
+    print("******************************************************************************************")
+    print(" Combining grids for chhh = " + str(cHHH) + ", ct = " + str(ct) + ", ctt = " + str(ctt) +", cg = " + str(cg) + ", cgg = " + str(cgg))
+    print("******************************************************************************************")
+
+    # Build grid for give value of cHHH
+    incr_dirname, incr_grid_name = os.path.split(grid_temp)
+    incr = os.path.join( incr_dirname, incr_grid_name[:9])
+    cHHH_grids = [  incr + '_+5.000000E-01_+4.782609E-01_+1.000000E+00_+6.875000E-01_+8.888889E-01.grid',
+  incr + '_-1.000000E+00_-2.500000E+00_+2.857143E-01_+4.666667E-01_+1.818182E-01.grid',
+  incr + '_+4.545455E-02_-5.263158E-02_-6.875000E-01_+2.941176E-01_+6.923077E-01.grid',
+  incr + '_+1.250000E-01_+1.111111E-01_-3.333333E-01_+2.173913E-01_-8.000000E-01.grid',
+  incr + '_-1.142857E+00_+4.444444E-01_+9.090909E-02_+7.272727E-01_+6.428571E-01.grid',
+  incr + '_+8.333333E-01_+4.545455E-01_-4.285714E-01_+9.523810E-02_+5.263158E-01.grid',
+  incr + '_+1.000000E+00_+1.428571E-01_-3.333333E-01_+5.217391E-01_-1.500000E+00.grid',
+  incr + '_-5.263158E-02_-7.142857E-02_+2.083333E-01_+6.923077E-01_+9.000000E-01.grid',
+  incr + '_-3.750000E-01_+4.705882E-01_-3.750000E-01_-6.666667E-01_+4.166667E-01.grid',
+  incr + '_-6.470588E-01_-8.333333E-01_+5.000000E-01_-1.333333E+00_+5.000000E-01.grid',
+  incr + '_-6.666667E-01_+1.666667E-01_+1.100000E+00_+5.000000E-01_+1.000000E+00.grid',
+  incr + '_+2.000000E-01_+6.000000E-01_+8.695652E-02_-3.478261E-01_-1.333333E+00.grid',
+  incr + '_-4.210526E-01_+4.444444E-01_-2.222222E-01_+3.809524E-01_-5.714286E-01.grid',
+  incr + '_-1.176471E-01_+2.200000E+00_-7.692308E-02_-1.875000E-01_+5.555556E-01.grid',
+  incr + '_+2.000000E-01_-8.571429E-01_-1.000000E+00_+3.125000E-01_-1.166667E+00.grid',
+  incr + '_+3.000000E-01_+1.111111E-01_+1.285714E+00_+1.285714E+00_-4.615385E-01.grid',
+  incr + '_-4.347826E-01_-8.000000E-01_+1.111111E-01_-6.315789E-01_+4.347826E-02.grid',
+  incr + '_-1.142857E+00_-3.333333E-01_-5.000000E-01_-5.000000E-01_+4.117647E-01.grid',
+  incr + '_+2.250000E+00_-6.666667E-01_+2.727273E-01_+3.571429E-01_-1.000000E+00.grid',
+  incr + '_+6.111111E-01_+2.777778E-01_+1.111111E-01_-8.000000E-01_+2.272727E-01.grid',
+  incr + '_+2.173913E-01_+3.000000E+00_-5.263158E-01_+4.761905E-02_-3.809524E-01.grid',
+  incr + '_+4.545455E-01_+4.000000E-01_-1.500000E+00_+5.454545E-01_+6.428571E-01.grid',
+  incr + '_+2.500000E-01_+1.111111E+00_-4.166667E-01_-4.444444E-01_+5.000000E-02.grid']
+
+    amps  = []
+    ME2s  = []
+    dME2s = []
+
+    for grid in cHHH_grids:
+        print(grid)
+        amps.append(np.loadtxt(grid, unpack=True))
+    print("Grids loaded.")
+
+    C = np.array([[14641/279841., 1., 121/2116., 121/1024., 64/81., 
+  121/529., 1331/24334., 11/46., 11/32., 8/9., 
+  1331/16928., 968/4761., 121/1472., 44/207., 11/36., 
+  14641/194672., 121/368., 1331/11776., 121/414., 
+  14641/135424., 121/256., 1331/8192., 121/288.], [625/16., 
+  4/49., 25/4., 49/225., 4/121., 25/14., 125/8., 5/7., 
+  -2/15., 4/77., -35/12., 25/22., -7/6., 5/11., 
+  -14/165., -175/24., -1/3., 49/90., -7/33., 49/36., 
+  14/225., -343/3375., 98/2475.], [1/130321., 121/256., 
+  1/174724., 25/139876., 81/169., -11/5776., -1/150898., 
+  1/608., -5/544., -99/208., 5/135014., 9/4693., 
+  -5/156332., -9/5434., 45/4862., -5/116603., 55/5168., 
+  -25/120802., -45/4199., 25/104329., -275/4624., 
+  125/108086., 225/3757.], [1/6561., 1/9., 1/5184., 
+  25/33856., 16/25., -1/243., 1/5832., -1/216., -5/552., 
+  4/15., 5/14904., -4/405., 5/13248., -1/90., -1/46., 
+  5/16767., -5/621., 25/38088., -4/207., 25/42849., 
+  -25/1587., 125/97336., -20/529.], [256/6561., 1/121., 
+  1024/3969., 4096/5929., 81/196., 16/891., -512/5103., 
+  -32/693., -64/847., 9/154., -1024/6237., 8/63., 
+  2048/4851., -16/49., -288/539., 512/8019., 32/1089., 
+  -2048/7623., 16/77., 1024/9801., 64/1331., -4096/9317., 
+  288/847.], [625/14641., 9/49., 625/4356., 25/3969., 
+  100/361., -75/847., 625/7986., -25/154., -5/147., 
+  -30/133., 125/7623., 250/2299., 125/4158., 125/627., 
+  50/1197., 250/27951., -10/539., 50/14553., 100/4389., 
+  100/53361., -4/1029., 20/27783., 40/8379.], [1/2401., 
+  1/9., 1/49., 144/529., 9/4., -1/147., 1/343., -1/21., 
+  -4/23., 1/2., 12/1127., -3/98., 12/161., -3/14., 
+  -18/23., 12/7889., -4/161., 144/3703., -18/161., 
+  144/25921., -48/529., 1728/12167., -216/529.], [1/38416., 
+  25/576., 1/70756., 81/61009., 81/100., 5/4704., 
+  1/52136., 5/6384., -15/1976., 3/16., -9/48412., 9/1960.,
+   -9/65702., 9/2660., -81/2470., -9/35672., -15/1456., 
+  81/44954., -81/1820., 81/33124., 135/1352., -729/41743., 
+  729/1690.], [4096/83521., 9/64., 9/289., 1/16., 25/144.,
+   -24/289., -192/4913., 9/136., -3/32., -5/32., 16/289., 
+  80/867., -3/68., -5/68., 5/48., -1024/14739., 2/17., 
+  -4/51., -20/153., 256/2601., -1/6., 1/9., 
+  5/27.], [625/1296., 1/4., 3025/10404., 1936/2601., 1/4.,
+   25/72., 1375/3672., 55/204., 22/51., 1/4., 275/459., 
+  25/72., 1210/2601., 55/204., 22/51., 125/162., 5/9., 
+  440/459., 5/9., 100/81., 8/9., 704/459., 
+  8/9.], [1/1296., 121/100., 1/81., 1/9., 1., 11/360., 
+  -1/324., -11/90., -11/30., 11/10., -1/108., 1/36., 
+  1/27., -1/9., -1/3., 1/432., 11/120., -1/36., 1/12., 
+  1/144., 11/40., -1/12., 1/4.], [81/625., 4/529., 
+  9/625., 64/13225., 16/9., 18/575., 27/625., 6/575., 
+  -16/2645., -8/69., -72/2875., -12/25., -24/2875., 
+  -4/25., 32/345., -216/2875., -48/2645., 192/13225., 
+  32/115., 576/13225., 128/12167., -512/60835., 
+  -256/1587.], [256/6561., 4/81., 1024/29241., 4096/159201.,
+   16/49., -32/729., -512/13851., 64/1539., 128/3591., 
+  8/63., -1024/32319., -64/567., 2048/68229., 128/1197., 
+  256/2793., 512/15309., -64/1701., -2048/75411., 
+  -128/1323., 1024/35721., -128/3969., -4096/175959., 
+  -256/3087.], [14641/625., 1/169., 484/7225., 9/18496., 
+  25/81., -121/325., -2662/2125., 22/1105., -3/1768., 
+  -5/117., 363/3400., 121/45., -33/5780., -22/153., 
+  5/408., -3993/2000., 33/1040., -99/10880., -11/48., 
+  1089/6400., -9/3328., 27/34816., 5/256.], [1296/2401., 
+  1., 36/1225., 1/256., 49/36., -36/49., -216/1715., 
+  6/35., -1/16., 7/6., 9/196., -6/7., -3/280., 1/5., 
+  -7/96., -135/686., 15/56., -15/896., 5/16., 225/3136., 
+  -25/256., 25/4096., -175/1536.], [1/6561., 81/49., 
+  1/900., 729/4900., 36/169., 1/63., 1/2430., 3/70., 
+  243/490., -54/91., 1/210., -2/351., 9/700., -1/65., 
+  -81/455., 1/567., 9/49., 27/490., -6/91., 1/49., 
+  729/343., 2187/3430., -486/637.], [256/625., 1/81., 
+  64/529., 14400/190969., 1/529., 16/225., 128/575., 
+  8/207., 40/1311., 1/207., 384/2185., 16/575., 
+  960/10051., 8/529., 120/10051., 768/2375., 16/285., 
+  1152/8303., 48/2185., 2304/9025., 16/361., 17280/157757., 
+  144/8303.], [1/81., 1/4., 64/441., 16/49., 49/289., 
+  -1/18., 8/189., -4/21., -2/7., -7/34., 4/63., 7/153., 
+  32/147., 8/51., 4/17., 1/54., -1/12., 2/21., 7/102., 
+  1/36., -1/8., 1/7., 7/68.], [16/81., 9/121., 9/4., 
+  2025/3136., 1., 4/33., -2/3., -9/22., 135/616., 
+  -3/11., 5/14., -4/9., -135/112., 3/2., -45/56., 
+  -20/189., -5/77., -75/392., 5/21., 25/441., 75/2156., 
+  1125/10976., -25/196.], [625/104976., 1/81., 3025/104976.,
+   484/2025., 25/484., 25/2916., 1375/104976., 55/2916., 
+  -22/405., 5/198., -55/1458., 125/7128., -121/1458., 
+  25/648., -1/9., -25/1458., -2/81., 44/405., -5/99., 
+  4/81., 16/225., -352/1125., 8/55.], [81., 100/361., 
+  225/529., 25/233289., 64/441., -90/19., 135/23., 
+  -150/437., -50/9177., 80/399., 15/161., -24/7., 
+  25/3703., -40/161., -40/10143., 9/7., -10/133., 5/3381.,
+   -8/147., 1/49., -10/8379., 5/213003., 
+  -8/9261.], [16/625., 9/4., 4/121., 900/14641., 81/196., 
+  -6/25., 8/275., -3/11., -45/121., -27/28., 24/605., 
+  18/175., 60/1331., 9/77., 135/847., 48/1375., -18/55., 
+  72/1331., 54/385., 144/3025., -54/121., 1080/14641., 
+  162/847.], [10000/6561., 25/144., 25/324., 1/81., 
+  1/400., -125/243., 250/729., -25/216., 5/108., -1/48., 
+  -100/729., 5/81., -5/162., 1/72., -1/180., -4000/6561., 
+  50/243., 40/729., -2/81., 1600/6561., -20/243., 
+  -16/729., 4/405.]])
+
+    Cinv = np.linalg.inv(C)
+
+    ctdim6=ct-1.
+    cHHHdim6=cHHH-1.
+
+    if EFTcount==3:
+        coeffs = np.array([ct**4,ctt**2,ct**2*cHHH**2,cg**2*cHHH**2,cgg**2,ctt*ct**2,ct**3*cHHH,
+                       ctt*ct*cHHH,ctt*cg*cHHH,ctt*cgg,ct**2*cg*cHHH,ct**2*cgg,
+                       ct*cHHH**2*cg,ct*cHHH*cgg,cg*cHHH*cgg,
+                       ct**3*cg,ct*ctt*cg,ct*cg**2*cHHH,ct*cg*cgg,
+                       ct**2*cg**2,ctt*cg**2,cg**3*cHHH,cg**2*cgg])
+    elif EFTcount==0:
+        coeffs = np.array([
+            1.+4.*ctdim6,
+            0,
+            1.+2.*(cHHHdim6+ctdim6),
+            0,
+            0,
+            ctt,
+            1.+cHHHdim6+3.*ctdim6,
+            ctt,
+            0,
+            0,
+            cg,
+            cgg,
+            cg,
+            cgg,
+            0,
+            cg,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0])
+    elif EFTcount==1:
+        coeffs = np.array([
+            1.+4.*ctdim6+4.*ctdim6**2,
+            ctt**2,
+            1.+2.*(cHHHdim6+ctdim6)+(cHHHdim6+ctdim6)**2,
+            cg**2,
+            cgg**2,
+            ctt*(1.+2.*ctdim6),
+            1.+cHHHdim6+3.*ctdim6+2.*ctdim6*(cHHHdim6+ctdim6),
+            ctt*(1.+ctdim6+cHHHdim6),
+            cg*ctt,
+            cgg*ctt,
+            cg*(1.+2.*ctdim6), # a11 needs additional care for EFTcount 1
+            cgg*(1.+2.*ctdim6),
+            cg*(1.+cHHHdim6+ctdim6),
+            cgg*(1.+cHHHdim6+ctdim6),
+            cg*cgg,
+            cg*(1.+2.*ctdim6),
+            cg*ctt,
+            0, # a18 needs additional care for EFTcount 1
+            cg*cgg,
+            0,
+            0,
+            0,
+            0])
+    elif EFTcount==2:
+        coeffs = np.array([
+            1.+4.*ctdim6+4.*ctdim6**2+2.*ctdim6**2,
+            ctt**2,
+            1.+2.*(cHHHdim6+ctdim6)+(cHHHdim6+ctdim6)**2+2.*cHHHdim6*ctdim6,
+            cg**2,
+            cgg**2,
+            ctt*(1.+2.*ctdim6),
+            1.+cHHHdim6+3.*ctdim6+2.*ctdim6*(cHHHdim6+ctdim6)+ctdim6*(cHHHdim6+ctdim6),
+            ctt*(1.+ctdim6+cHHHdim6),
+            cg*ctt,
+            cgg*ctt,
+            cg*(1.+2.*ctdim6+cHHHdim6),
+            cgg*(1.+2.*ctdim6),
+            cg*(1.+cHHHdim6+ctdim6+cHHHdim6),
+            cgg*(1.+cHHHdim6+ctdim6),
+            cg*cgg,
+            cg*(1.+2.*ctdim6+ctdim6),
+            cg*ctt,
+            cg**2,
+            cg*cgg,
+            cg**2,
+            0,
+            0,
+            0])
+    else:
+        print("ERROR: Wrong setting for EFTcount in Creategrid!!")
+        return
+
+    # Check that the grids have the same values for s, t
+    for amp in amps[0:]:
+      for amp2 in amps[0:]:
+
+        if not (np.array_equal(amp[0], amp2[0]) and np.array_equal(amp[1], amp2[1])):
+            print("The virtual grids do not contain the same phase-space points!")
+
+    # load pdf to get values of alpha_s
+    pdf=lhapdf.mkPDF(lhaid)
+
+    for i, psp in enumerate(amps[0][0]):
+        if usesmeft==1:
+            mH = 125.
+            beta = amps[0][0][i] # beta=sqrt(1. - 4. * mH**2 / s)  =>  s = 4. * mH**2 / (1 - beta**2)
+            s = 4. * mH**2 / (1 - beta**2)
+            muRs = s / 4. * renfac**2
+            alphas = pdf.alphasQ2(muRs)
+
+            coeffstmp = np.matmul(scipy.linalg.block_diag(1.,1.,1.,1./alphas**2,1./alphas**2,1.,1.,
+                       1.,1./alphas,1./alphas,1./alphas,1./alphas,
+                       1./alphas,1./alphas,1./alphas**2,
+                       1./alphas,1./alphas,1./alphas**2,1./alphas**2,
+                       1./alphas**2,1./alphas**2,1./alphas**3,1./alphas**3),coeffs)
+        else:
+            coeffstmp = coeffs
+
+        A = np.matmul(Cinv, np.transpose(np.array([ [amps[j][2][i] for j in range(len(cHHH_grids))] ])))
+        ME2 = np.matmul(coeffstmp, A)
+
+        # Compute the uncertainties on the final PSP amplitude (uncorr. between PSPs, corr. between A coeffs)
+        sigmaF = np.diag( np.array([ amps[j][3][i]**2 for j in range(len(cHHH_grids))] ))
+        dA = np.matmul(Cinv, np.matmul(sigmaF, np.transpose(Cinv)))
+        dME2 = np.matmul(coeffstmp, np.matmul(coeffstmp, dA))
+
+        ME2s.append(ME2)
+        dME2s.append(np.sqrt(dME2))
+
+    np.savetxt(grid_temp, np.transpose([amps[0][0], amps[0][1], np.array(ME2s).flatten(), np.array(dME2s).flatten()]))
+    print("Saved grid " + str(grid_temp))
+
+
 
 class Bin:
     def __init__(self,n=0,y=0.,y2=0.,e2=0.):
@@ -127,28 +416,6 @@ class Grid:
                     popt, pcov2 = scipy.optimize.curve_fit(linfunc, X, Y, sigma=sigma, absolute_sigma=True)
                     popt, pcov1 = scipy.optimize.curve_fit(linfunc, X, Y, sigma=sigma, absolute_sigma=False)
 
-                    # fig = plt.figure(dpi=100)
-                    # ax = fig.add_subplot(111, projection='3d')
-                    # fig.suptitle('Binned Points, Bin = ' + str(k))
-                    # ax.plot([x[0]], [x[1]], [popt[0]], linestyle="None", marker="x")
-                    # ax.plot(X[0]+x[0], X[1]+x[1], Y, linestyle="None", marker="o")
-                    # ax.plot((np.array([xx for xx in dat]).T)[0]+x[0], (np.array([xx for xx in dat]).T)[1]+x[1], (np.array([xx for xx in dat]).T)[2], linestyle="None", marker="X")
-                    # #for i in np.arange(0, len(X[0])):
-                    # #    ax.plot([Xnoshift[0][i], Xnoshift[0][i]], [Xnoshift[1][i], Xnoshift[1][i]],
-                    # #            [Y[i] + sigma[i], Y[i] - sigma[i]], marker="_")
-                    # Xtest = np.arange(0, 1, 0.01)
-                    # Ytest = np.arange(0, 1, 0.01)
-                    # Xtest, Ytest = np.meshgrid(Xtest, Ytest)
-                    # print('Xtest',Xtest)
-                    # result = linfunc( (Xtest-x[0], Ytest-x[1]), popt[0], popt[1], popt[2])
-                    # ax.plot_wireframe(Xtest, Ytest, result, rstride=10, cstride=10)
-                    # ax.set_xlabel('beta')
-                    # ax.set_ylabel('cos(theta)')
-                    # ax.set_xlim3d(-1.,1.)
-                    # ax.set_ylim3d(-1.,1.)
-                    # ax.set_zlim3d(0.9*min(Y), 1.1*max(Y))
-                    # plt.show()
-
                     # Warn about negative first entries in covariance matrix (only possible due to numerical instability)
                     if pcov1[0,0] < 0. or pcov2[0,0] < 0.:
                         print('WARNING: Negative covariance matrix in bin ' + str(k))
@@ -157,7 +424,6 @@ class Grid:
                         print('nearest_points',nearest_points)
                         print('bin_points',bin_points)
 
-                    #self.data[k].add(linfunc((x[0],x[1]),popt[0],popt[1],popt[2]), max(sqrt(abs(pcov1[0, 0])), sqrt(abs(pcov2[0, 0]))))  # corresponds to multiplying error estimate of chi-sq fit with max(1,chisq)
                     self.data[k].add(popt[0], max(sqrt(abs(pcov1[0, 0])), sqrt(abs(pcov2[0, 0]))))  # corresponds to multiplying error estimate of chi-sq fit with max(1,chisq)
                     '''
                        model y = f(x) = c
@@ -182,7 +448,7 @@ class Grid:
         grid_yaml['dim'] = str(self.dim)
         grid_yaml['xmin'] = [ "{:.20e}".format(x) for x in self.xmin.tolist() ]
         grid_yaml['xmax'] = [ "{:.20e}".format(x) for x in self.xmax.tolist() ]
-        grid_yaml['nbin'] = map(str,self.nbin.tolist())
+        grid_yaml['nbin'] = [str(x) for x in self.nbin.tolist()]
         grid_yaml['binned'] = int(self.binned)
         grid_yaml['lowclip'] = "{:.20e}".format(self.lowclip)
         grid_yaml['highclip'] = "{:.20e}".format(self.highclip)
@@ -199,14 +465,14 @@ class Grid:
         # Load the grid from a dictionary
         self.method = int(grid_yaml['method'])
         self.dim = int(grid_yaml['dim'])
-        self.xmin = np.array( map(float, grid_yaml['xmin']) )
-        self.xmax = np.array( map(float, grid_yaml['xmax']) )
-        self.nbin = np.array(map(int,grid_yaml['nbin']))
+        self.xmin = np.array( [float(x) for x in grid_yaml['xmin']] )
+        self.xmax = np.array( [float(x) for x in grid_yaml['xmax']] )
+        self.nbin = np.array( [int(x) for x in grid_yaml['nbin']] )
         self.binned = bool(grid_yaml['binned'])
         self.lowclip = np.array(float(grid_yaml['lowclip']))
         self.highclip = np.array(float(grid_yaml['highclip']))
         self.nneighbour = int(grid_yaml['nneighbour'])
-        self.dx = np.array( map(float, grid_yaml['dx']) )
+        self.dx = np.array( [float(x) for x in grid_yaml['dx']] )
         self.data = {}
         self.deg = {}  # degree of interpolation poynomial (Note: not saved)
         self.pol = {}  # coefficients of interpolation polynomial (Note: not saved)
@@ -263,7 +529,6 @@ class Grid:
                         k[d] = self.nbin[d] - 1
                         x[d] = self.xmax[d]
                         res += [[x.copy(), self.data[tuple(k)].gety(sample)], ]
-                        #            print("b", self.xmin,self.xmax)
                 for corner in np.ndindex(tuple([2, ] * self.dim)):
                     k = corner * (self.nbin - 1)
                     x = np.array(corner, float)
@@ -309,11 +574,6 @@ class Grid:
                 self.pol[k, i] = self.polyfit2d(x, y, z, orders=degree)
 
     def interpolate(self, x, y, selectsample=-1):
-        # Return just the bin central value (for testing)
-        # k=self.k(tuple([x, y]))
-        # print('k',k)
-        # print('self.data[k].gety()',self.data[k].gety())
-        # return (self.data[k].gety(), 0.)
         if (self.method == 2):
             k = self.k(tuple([x, y]))
             temp = [self.polyval2d(x, y, self.pol[k, i], self.deg[k]) for i in range(self.nsamples)]
@@ -348,7 +608,7 @@ class CreateGrid:
 
             # Load yaml file
             with open(self.selected_grid, 'r') as infile:
-                grid_yaml = yaml.load(infile)
+                grid_yaml = yaml.safe_load(infile)
 
             # Parse cdfdata
             self.cdfdata = np.array(grid_yaml['cdfdata'], dtype=float)
@@ -443,6 +703,8 @@ class CreateGrid:
         #pl.rc('text',usetex=true) # Use LaTex
         #pl.rcParams['text.latex.preamble']=r'\usepackage{amstext}\newcommand{\dd}{\mathrm{d}},\mathchardef\mhyphen="2D'
         
+        closure_grid_dirname, closure_grid_name = os.path.split(closure_grid)
+        
         b, cth, y, e = np.loadtxt(closure_grid, unpack=True)
 
         percent_deviations = []
@@ -451,7 +713,6 @@ class CreateGrid:
             xUniform = interpolate.splev(b_value, self.cdf)
             percent_deviations.append( 100.*(y_value-self.interpolator.interpolate(xUniform, cth_value)[0])/y_value )
             std_deviations.append( (y_value-self.interpolator.interpolate(xUniform, cth_value)[0])/e_value )
-            #print (b_value, cth_value, y_value, self.interpolator.interpolate(xUniform, cth_value))
         percent_deviations = np.array(percent_deviations)
         std_deviations = np.array(std_deviations)
         
@@ -475,7 +736,7 @@ class CreateGrid:
         #ax.set_ylabel('cos(theta)')
         #ax.set_xlim3d(0., 1.)
         #ax.set_ylim3d(0., 1.)
-        #pl.savefig('closure'+str(closure_grid)+'.pdf',bbox_inches='tight')
+        #pl.savefig(os.path.join(closure_grid_dirnamem'closure'+str(closure_grid_name)+'.pdf'),bbox_inches='tight')
 
         #
         # Percent deviation of grid from central value of point
@@ -485,7 +746,7 @@ class CreateGrid:
         _, _, _ = plt.hist(np.clip(percent_deviations, bins[0], bins[-1]), bins=bins, histtype='step', edgecolor='red', linewidth=1)
         plt.xlabel(r'$\mathrm{difference\ [\%]}$')
         plt.ylabel(r'$N_\mathrm{{points}}$')
-        pl.savefig('percent_difference_'+str(closure_grid)+'.pdf',bbox_inches='tight')
+        pl.savefig(os.path.join(closure_grid_dirname,'percent_difference_'+str(closure_grid_name)+'.pdf'),bbox_inches='tight')
 
         ##
         ## Number of standard deviations between grid and point

@@ -11,7 +11,7 @@ int main()
     // Initialise python and grid
     python_initialize();
     python_printinfo();
-    std::string grid_name = "Virt_EFT.grid";
+    std::string grid_name = "grids_sm/Virt_EFT.grid";
     PyObject* pGrid = grid_initialize(grid_name.c_str());
 
     // Evaluate point

@@ -53,7 +53,7 @@
 
       call python_initialize
       call python_printinfo
-      grid = grid_initialize(C_CHAR_"Virt_EFT.grid"//C_NULL_CHAR)
+      grid = grid_initialize(C_CHAR_"grids_sm/Virt_EFT.grid"//C_NULL_CHAR)
 
       ! Test point 1
       s = 250000.D0

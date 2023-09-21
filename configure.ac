@@ -1,4 +1,4 @@
-AC_INIT([hhgrid], [0.3])
+AC_INIT([hhgrid], [0.4])
 AC_CONFIG_SRCDIR([src/hhgrid.h])
 AC_CONFIG_MACRO_DIR([acinclude.d])
 
@@ -34,6 +34,6 @@ AC_CHECK_HEADERS([stdlib.h assert.h])
 
 AC_SUBST(PYTHON_CSPEC)
 AC_SUBST(PYTHON_LSPEC)
-AC_CONFIG_FILES(Makefile src/Makefile check/Makefile share/Makefile hhgrid-config)
+AC_CONFIG_FILES(Makefile src/Makefile check/Makefile share/Makefile share/grids_sm/Makefile share/grids_eft/Makefile hhgrid-config)
 
 AC_OUTPUT

@@ -42,7 +42,7 @@
 
       call python_initialize
       call python_printinfo
-      grid = grid_initialize(C_CHAR_"Virt_EFT.grid"//C_NULL_CHAR)
+      grid = grid_initialize(C_CHAR_"grids_sm/Virt_EFT.grid"//C_NULL_CHAR)
 
       s = 2.56513D6
       t = -482321.D0

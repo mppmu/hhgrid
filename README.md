@@ -29,17 +29,19 @@ If you use this code please cite the paper in which the grid was constructed  an
 
 Pre-requisites:
 * `python` (tested for 3.11.3)
-* `pyyaml` (tested for 6.0)
-* `numpy` (tested for 1.24.2)
-* `scipy` (tested for 1.10.1)
+* `pyyaml` (tested for 6.0.1)
+* `numpy` (tested for 1.25.1)
+* `scipy` (tested for 1.11.1)
+* `lhapdf` (tested for 6.5.4) with the `PDF4LHC15_nlo_30_pdfas (lhaid=90400)` PDF set available
 
-Assuming you have `python` you can check for the availability of `yaml`, `numpy` and `scipy` with the commands:
+Assuming you have `python` you can check for the availability of `yaml`, `numpy`, `scipy` and `lhapdf` with the commands:
 ```shell
 python3 -c "import yaml"
 python3 -c "import numpy"
 python3 -c "import scipy"
+python3 -c "import lhapdf; pdf=lhapdf.mkPDF(90400)"
 ```
-If no output is given from these commands then the packages are available.
+If no errors are raised by these commands then the packages are available.
  
 To use the Python/C API you need to build the `hhgrid` library. 
  To do this run the usual `autotools` commands (replacing `<build-directory>` with the path you would like to install the library to):

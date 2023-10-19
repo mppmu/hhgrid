@@ -1,2 +1,2 @@
 #!/bin/bash
-PYTHONPATH=`pwd`/../share ./test_cpp_grid.x
+PYTHONPATH="`pwd`/../share:$PYTHONPATH" ./test_cpp_grid.x

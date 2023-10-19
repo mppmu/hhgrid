@@ -14,8 +14,11 @@ import yaml
 
 def combinegrids(grid_temp, cHHH, ct, ctt, cg, cgg, EFTcount=3, usesmeft=0, lhaid=90400, renfac=1.):
 
+    print(f'py: combinegrids, called for: {grid_temp}')
+
     # Grid exists, proceed
     if os.path.exists(grid_temp):
+        print(f'py: combinegrids, grid already exists: {grid_temp}')
         return
 
    #    -- Because the lock mechanism was not robust enough,
@@ -593,6 +596,7 @@ class Grid:
 
 class CreateGrid:
     def __init__(self,selected_grid):
+        print(f'py: Initialising {selected_grid}')
         self.selected_grid = selected_grid
         self.selected_grid_dirname = os.path.dirname(self.selected_grid)
         self.mHs = 125.**2

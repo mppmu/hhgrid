@@ -71,13 +71,13 @@ void combine_grids(const char* grid_temp, double cHHH, double ct, double ctt, do
   "+4.545455E-01_+4.000000E-01_-1.500000E+00_+5.454545E-01_+6.428571E-01",
   "+2.500000E-01_+1.111111E+00_-4.166667E-01_-4.444444E-01_+5.000000E-02"};
 
-    int search_paths = 1;
+    int search_paths;
     char* delims = ":";
     char* path_sep = "/";
     char* grid_file_path;
+    char* pythonpath;
+    char* result;
     size_t len_path_sep = strlen(path_sep);
-    char* pythonpath = strdup(getenv("PYTHONPATH"));
-    char* result = strtok( pythonpath, delims );
     size_t len_grid_temp = strlen(grid_temp);
 
     // Get length of grid_name basename
@@ -96,50 +96,52 @@ void combine_grids(const char* grid_temp, double cHHH, double ct, double ctt, do
     grid_tmp[len_grid_temp - len_basename_grid_name + 9] = '\0';
     printf("grid_tmp: %s\n", grid_tmp);
 
-    for (int i=0; i<(sizeof(values) / sizeof(values[0])); ++i) {
-      size_t len_grid_name = strlen(grid_tmp) + strlen("_") + strlen(values[i]) + strlen(".grid") + 1;  // +14 for _***.grid
-      char* grid_name = (char*) malloc(len_grid_name);
-      memcpy(grid_name, grid_tmp, strlen(grid_tmp));
-      memcpy(grid_name + strlen(grid_tmp), "_", strlen("_"));
-      memcpy(grid_name + strlen(grid_tmp) + strlen("_"), values[i], strlen(values[i]));
-      memcpy(grid_name + strlen(grid_tmp) + strlen("_") + strlen(values[i]), ".grid", strlen(".grid"));
-      grid_name[len_grid_name-1] = '\0';
-
-    // Check if grid_name is accessible as-is and if so add cwd to PYTHONPATH
-    if( access(grid_name, F_OK) != -1 && access(grid_name, R_OK) != -1 )
+    for (int i=0; i<(sizeof(values) / sizeof(values[0])); ++i) 
     {
-        printf("Looking for %s in current directory. Found\n", grid_name);
-        grid_file_path = (char*) malloc(len_grid_name + 1); // +1 for null terminator
-        memcpy(grid_file_path, grid_name, len_grid_name + 1);
-        search_paths = 0;
-        setenv("PYTHONPATH", ".", 1); // Set PYTHONPATH to look here
-    }
+       size_t len_grid_name = strlen(grid_tmp) + strlen("_") + strlen(values[i]) + strlen(".grid") + 1;  // +14 for _***.grid
+       char* grid_name = (char*) malloc(len_grid_name);
+       memcpy(grid_name, grid_tmp, strlen(grid_tmp));
+       memcpy(grid_name + strlen(grid_tmp), "_", strlen("_"));
+       memcpy(grid_name + strlen(grid_tmp) + strlen("_"), values[i], strlen(values[i]));
+       memcpy(grid_name + strlen(grid_tmp) + strlen("_") + strlen(values[i]), ".grid", strlen(".grid"));
+       grid_name[len_grid_name-1] = '\0';
 
-    // search PYTHONPATH for grid_name
-    search_paths = 1;
-    while( search_paths == 1 && result != NULL )
-    {
-        size_t len_result = strlen(result);
-        grid_file_path = (char*) malloc (len_result + len_path_sep + len_grid_name + 1); // +1 for null terminator
-        memcpy(grid_file_path, result, len_result);
-        memcpy(grid_file_path + len_result, path_sep, len_path_sep);
-        memcpy(grid_file_path + len_result + len_path_sep, grid_name, len_grid_name + 1); // +1 for null terminator
-        printf("Searching for %s in: %s ", grid_name, grid_file_path);
-        if( access(grid_file_path, F_OK) != -1 && access(grid_file_path, R_OK) != -1 )
-        {
-            printf("found\n");
-            search_paths = 0;
-        } else
-        {
-            printf("not found\n");
-            result = strtok( NULL, delims );
-            if(result == NULL)
-            {
-                printf("ERROR: Failed to find grid\n");
-                exit(1);
-            }
+       // Check if grid_name is accessible as-is and if so add cwd to PYTHONPATH
+       if( access(grid_name, F_OK) != -1 && access(grid_name, R_OK) != -1 )
+       {
+           printf("Looking for %s in current directory. Found\n", grid_name);
+           grid_file_path = (char*) malloc(len_grid_name + 1); // +1 for null terminator
+           memcpy(grid_file_path, grid_name, len_grid_name + 1);
+           setenv("PYTHONPATH", ".", 1); // Set PYTHONPATH to look here
+       }
+
+       // search PYTHONPATH for grid_name
+       pythonpath = strdup(getenv("PYTHONPATH"));
+       result = strtok( pythonpath, delims );
+       search_paths = 1;
+       while( search_paths == 1 && result != NULL )
+       {
+           size_t len_result = strlen(result);
+           grid_file_path = (char*) malloc (len_result + len_path_sep + len_grid_name + 1); // +1 for null terminator
+           memcpy(grid_file_path, result, len_result);
+           memcpy(grid_file_path + len_result, path_sep, len_path_sep);
+           memcpy(grid_file_path + len_result + len_path_sep, grid_name, len_grid_name + 1); // +1 for null terminator
+           printf("Searching for %s in: %s ", grid_name, grid_file_path);
+           if( access(grid_file_path, F_OK) != -1 && access(grid_file_path, R_OK) != -1 )
+           {
+               printf("found\n");
+               search_paths = 0;
+           } else
+           {
+               printf("not found\n");
+               result = strtok( NULL, delims );
+               if(result == NULL)
+               {
+                   printf("ERROR: Failed to find grid\n");
+                   exit(1);
+               }
+           }
         }
-    }
     }
     grid_file_path[strlen(grid_file_path) - strlen("_") - strlen(values[0]) - strlen(".grid")] = '\0'; // take only the first characters as gridname
     printf("Grid file path: %s\n", grid_file_path);
@@ -278,10 +280,12 @@ void combine_grids(const char* grid_temp, double cHHH, double ct, double ctt, do
 
 PyObject* grid_initialize(const char* grid_name)
 {
-    int search_paths = 1;
+    int search_paths;
     char* delims = ":";
     char* path_sep = "/";
     char* grid_file_path;
+    char* pythonpath;
+    char* result;
     size_t len_path_sep = strlen(path_sep);
     size_t len_grid_name = strlen(grid_name);
 
@@ -296,8 +300,8 @@ PyObject* grid_initialize(const char* grid_name)
         len_basename_grid_name = strlen(basename_grid_name + 1); // +1 to skip initial path_sep
     }
     
-    char* pythonpath = strdup(getenv("PYTHONPATH"));
-    char* result = strtok( pythonpath, delims );
+    pythonpath = strdup(getenv("PYTHONPATH"));
+    result = strtok( pythonpath, delims );
 
     char* events_file_path;
     char* events_name = "events.cdf";
@@ -313,11 +317,12 @@ PyObject* grid_initialize(const char* grid_name)
         printf("Looking for %s in current directory. Found\n", grid_name);
         grid_file_path = (char*) malloc(len_grid_name + 1); // +1 for null terminator
         memcpy(grid_file_path, grid_name, len_grid_name + 1);
-        search_paths = 0;
         setenv("PYTHONPATH", ".", 1); // Set PYTHONPATH to look here
     }
 
     // search PYTHONPATH for grid_name and events_name
+    pythonpath = strdup(getenv("PYTHONPATH"));
+    result = strtok( pythonpath, delims );
     search_paths = 1;
     while( search_paths == 1 && result != NULL )
     {

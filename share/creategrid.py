@@ -12,13 +12,19 @@ import os, time
 import lhapdf
 import yaml
 
-def combinegrids(grid_temp, cHHH, ct, ctt, cg, cgg, EFTcount=3, usesmeft=0, lhaid=90400, renfac=1.):
+def combinegrids_name(grid_base, cHHH, ct, ctt, cg, cgg, EFTcount=3, usesmeft=0, lhaid=90400, renfac=1.):
+    return f'{grid_base}_{cHHH:+.6E}_{ct:+.6E}_{ctt:+.6E}_{cg:+.6E}_{cgg:+.6E}_EFTcount{EFTcount}_usesmeft{usesmeft}_lhaid{lhaid}_renfac{renfac:+.6E}_combined.grid'
 
-    print(f'py: combinegrids, called for: {grid_temp}')
+
+def combinegrids(grid_base, cHHH, ct, ctt, cg, cgg, EFTcount=3, usesmeft=0, lhaid=90400, renfac=1.):
+
+    print(f'py: combinegrids, called for: {grid_base}')
+
+    grid_combined_name = combinegrids_name(grid_base, cHHH, ct, ctt, cg, cgg, EFTcount=3, usesmeft=0, lhaid=90400, renfac=1.)
 
     # Grid exists, proceed
-    if os.path.exists(grid_temp):
-        print(f'py: combinegrids, grid already exists: {grid_temp}')
+    if os.path.exists(grid_combined_name):
+        print(f'py: combinegrids, grid already exists: {grid_combined_name}')
         return
 
    #    -- Because the lock mechanism was not robust enough,
@@ -36,7 +42,7 @@ def combinegrids(grid_temp, cHHH, ct, ctt, cg, cgg, EFTcount=3, usesmeft=0, lhai
     print("******************************************************************************************")
 
     # Build grid for give value of cHHH
-    incr_dirname, incr_grid_name = os.path.split(grid_temp)
+    incr_dirname, incr_grid_name = os.path.split(grid_base)
     incr = os.path.join( incr_dirname, incr_grid_name[:9])
     cHHH_grids = [  incr + '_+5.000000E-01_+4.782609E-01_+1.000000E+00_+6.875000E-01_+8.888889E-01.grid',
   incr + '_-1.000000E+00_-2.500000E+00_+2.857143E-01_+4.666667E-01_+1.818182E-01.grid',
@@ -297,8 +303,8 @@ def combinegrids(grid_temp, cHHH, ct, ctt, cg, cgg, EFTcount=3, usesmeft=0, lhai
         ME2s.append(ME2)
         dME2s.append(np.sqrt(dME2))
 
-    np.savetxt(grid_temp, np.transpose([amps[0][0], amps[0][1], np.array(ME2s).flatten(), np.array(dME2s).flatten()]))
-    print("Saved grid " + str(grid_temp))
+    np.savetxt(grid_combined_name, np.transpose([amps[0][0], amps[0][1], np.array(ME2s).flatten(), np.array(dME2s).flatten()]))
+    print("Saved grid " + str(grid_combined_name))
 
 
 

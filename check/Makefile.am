@@ -6,7 +6,7 @@ LDADD = ../src/libhhgrid.la $(PYTHON_LSPEC)
 
 test_c_grid_x_SOURCES = test_c_grid.c
 test_cpp_grid_x_SOURCES = test_cpp_grid.cpp
-test_c_combine_grids_SOURCES = test_c_combine_grids.c
+test_c_combine_grids_x_SOURCES = test_c_combine_grids.c
 
 if ENABLE_FORTRAN
 check_PROGRAMS += test_f90_grid.x
